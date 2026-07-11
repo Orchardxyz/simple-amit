@@ -7,7 +7,8 @@
             "label": "watch",
             "dependsOn": [
                 "npm: watch:tsc",
-                "npm: watch:esbuild"
+                "npm: watch:extension",
+                "npm: watch:webview"
             ],
             "presentation": {
                 "reveal": "never"
@@ -19,11 +20,42 @@
         },
         {
             "type": "npm",
-            "script": "watch:esbuild",
+            "script": "watch:extension",
             "group": "build",
             "problemMatcher": "$esbuild-watch",
             "isBackground": true,
-            "label": "npm: watch:esbuild",
+            "label": "npm: watch:extension",
+            "presentation": {
+                "group": "watch",
+                "reveal": "never"
+            }
+        },
+        {
+            "type": "npm",
+            "script": "watch:webview",
+            "group": "build",
+            "problemMatcher": {
+                "owner": "vite",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}"
+                ],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(error|warning):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "vite v.* building",
+                    "endsPattern": "built in \\d+ms"
+                }
+            },
+            "isBackground": true,
+            "label": "npm: watch:webview",
             "presentation": {
                 "group": "watch",
                 "reveal": "never"
