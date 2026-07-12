@@ -38,6 +38,7 @@
     }
   },
   "scripts": {
+    "prepare": "husky",
     "vscode:prepublish": "pnpm run package",
     "compile": "pnpm run check-types && pnpm run lint && pnpm run build:webview && pnpm run build:extension",
     "watch": "npm-run-all -p watch:*",
@@ -68,6 +69,7 @@
     "esbuild": "^0.28.1",
     "eslint": "^10.5.0",
     "eslint-plugin-svelte": "^3.20.0",
+    "husky": "^9.1.7",
     "npm-run-all": "^4.1.5",
     "svelte": "^5.56.4",
     "svelte-check": "^4.7.2",
