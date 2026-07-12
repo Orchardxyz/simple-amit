@@ -10,14 +10,32 @@
   "categories": [
     "Other"
   ],
+  "icon": "resources/brand/simple-amit-mark.png",
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "simple-amit.openSettings",
         "title": "Simple Amit: Open Webview"
+      },
+      {
+        "command": "simple-amit.generateCommitMessage",
+        "title": "Simple Amit: Generate Commit Message",
+        "icon": {
+          "light": "resources/icons/simple-amit-light.svg",
+          "dark": "resources/icons/simple-amit-dark.svg"
+        }
       }
-    ]
+    ],
+    "menus": {
+      "scm/title": [
+        {
+          "command": "simple-amit.generateCommitMessage",
+          "when": "scmProvider == git",
+          "group": "navigation@1"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "pnpm run package",

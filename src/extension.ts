@@ -8,6 +8,11 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand('simple-amit.openSettings', () =>
 			webviewPanel.show(),
 		),
+		vscode.commands.registerCommand('simple-amit.generateCommitMessage', () => {
+			vscode.window.showInformationMessage(
+				'Commit-message generation is coming soon.',
+			);
+		}),
 	);
 }
 

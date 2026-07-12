@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-labelledby="title">
+  <title id="title">Simple Amit thinking mark</title>
+  <defs>
+    <filter id="dot-glow" x="-200%" y="-200%" width="500%" height="500%">
+      <feGaussianBlur stdDeviation=".22"/>
+    </filter>
+  </defs>
+  <rect width="24" height="24" rx="4.5" fill="#101010"/>
+  <g fill="#ffffff" filter="url(#dot-glow)" opacity=".18">
+    <circle cx="19.1" cy="5.5" r=".78"/>
+    <circle cx="4.9" cy="18.5" r=".78"/>
+  </g>
+  <g fill="#ffffff">
+    <circle cx="19.1" cy="5.5" r=".48"/>
+    <circle cx="4.9" cy="18.5" r=".48"/>
+  </g>
+  <path transform="translate(12 12) scale(1.15) translate(-12 -12)" d="M12 8.45c.5 2.2 1.35 3.05 3.55 3.55-2.2.5-3.05 1.35-3.55 3.55-.5-2.2-1.35-3.05-3.55-3.55 2.2-.5 3.05-1.35 3.55-3.55Z" fill="#ffffff"/>
+</svg>
