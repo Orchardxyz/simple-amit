@@ -13,7 +13,7 @@ export class SimpleAmitWebviewPanel {
 
 		this.panel = vscode.window.createWebviewPanel(
 			'simpleAmitSettings',
-			'Simple Amit Settings',
+			'Simple Amit',
 			vscode.ViewColumn.One,
 			{
 				enableScripts: true,
@@ -21,6 +21,12 @@ export class SimpleAmitWebviewPanel {
 					vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'webview'),
 				],
 			},
+		);
+		this.panel.iconPath = vscode.Uri.joinPath(
+			this.context.extensionUri,
+			'resources',
+			'brand',
+			'simple-amit-mark.svg',
 		);
 
 		this.panel.webview.html = this.renderHtml(this.panel.webview);

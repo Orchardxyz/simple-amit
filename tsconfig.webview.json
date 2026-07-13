@@ -1,0 +1,8 @@
+{
+	"extends": "./tsconfig.json",
+	"include": [
+		"src/shared/**/*.ts",
+		"src/webview/**/*.ts",
+		"src/webview/**/*.svelte"
+	]
+}
