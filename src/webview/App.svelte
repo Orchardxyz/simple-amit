@@ -1,8 +1,8 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
-	import { compatibleProviders, defaultCommitSettings } from '../shared/commitSettings';
 	import brandMarkUrl from '../../resources/brand/simple-amit-mark.svg?url';
+	import { compatibleProviders, defaultCommitSettings } from '../shared/commitSettings';
 	import CommitMessageSettings from './components/CommitMessageSettings.svelte';
 	import ModelPickerDialog from './components/ModelPickerDialog.svelte';
 	import ProviderSettings from './components/ProviderSettings.svelte';

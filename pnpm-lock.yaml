@@ -31,8 +31,8 @@ importers:
         specifier: ^1.24.0
         version: 1.24.0(svelte@5.56.4(@typescript-eslint/types@8.63.0))
       '@oryz/eslint-config':
-        specifier: ^2.0.0
-        version: 2.0.0(@typescript-eslint/utils@8.63.0(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
+        specifier: ^2.1.0
+        version: 2.1.0(@typescript-eslint/utils@8.63.0(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
       '@sveltejs/vite-plugin-svelte':
         specifier: ^7.2.0
         version: 7.2.0(svelte@5.56.4(@typescript-eslint/types@8.63.0))(vite@8.1.4(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0))
@@ -423,8 +423,8 @@ packages:
       '@emnapi/core': ^1.7.1
       '@emnapi/runtime': ^1.7.1
 
-  '@oryz/eslint-config@2.0.0':
-    resolution: {integrity: sha512-5ZcxFRD9CIDos5UkqHZ7NxTYKm4UXUeqdUPO/9DO+WhBG3BMSirqb+/DVX0VAK61NgpPlJgdEZ9bCIeG/GRvog==}
+  '@oryz/eslint-config@2.1.0':
+    resolution: {integrity: sha512-hTC9wH4DbESTvoVSLFllsanTsjMi0789pPsANKx4SXuH5RZRfHNSfqK5wbgDUfxU0l5j7d57ZkRZnMhdLtUNDQ==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
     peerDependencies:
       eslint: ^10.0.0
@@ -2816,7 +2816,7 @@ snapshots:
       '@tybys/wasm-util': 0.10.3
     optional: true
 
-  '@oryz/eslint-config@2.0.0(@typescript-eslint/utils@8.63.0(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)':
+  '@oryz/eslint-config@2.1.0(@typescript-eslint/utils@8.63.0(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)':
     dependencies:
       '@eslint/js': 10.0.1(eslint@10.6.0(jiti@2.7.0))
       eslint: 10.6.0(jiti@2.7.0)
