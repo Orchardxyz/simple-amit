@@ -1,0 +1,6 @@
+dist
+node_modules
+out
+.vscode-test
+pnpm-lock.yaml
+*.vsix

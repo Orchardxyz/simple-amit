@@ -1,12 +1,8 @@
 {
-	"extends": "./tsconfig.json",
-	"compilerOptions": {
-		"module": "Node16",
-		"moduleResolution": "Node16"
-	},
-	"include": [
-		"src/extension.ts",
-		"src/webviewPanel.ts",
-		"src/test/**/*.ts"
-	]
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "Node16",
+    "moduleResolution": "Node16"
+  },
+  "include": ["src/extension.ts", "src/webviewPanel.ts", "src/test/**/*.ts"]
 }

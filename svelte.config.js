@@ -1,5 +1,5 @@
 module.exports = {
-	compilerOptions: {
-		runes: true,
-	},
+  compilerOptions: {
+    runes: true
+  }
 };

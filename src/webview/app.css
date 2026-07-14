@@ -1,39 +1,39 @@
 @import "tailwindcss";
 
 @theme {
-	--color-canvas: var(--vscode-editor-background);
-	--color-fg: var(--vscode-editor-foreground);
-	--font-sans: var(--vscode-font-family);
+  --color-canvas: var(--vscode-editor-background);
+  --color-fg: var(--vscode-editor-foreground);
+  --font-sans: var(--vscode-font-family);
 }
 
 @layer base {
-	:root {
-		color-scheme: light dark;
-	}
+  :root {
+    color-scheme: light dark;
+  }
 
-	body {
-		min-height: 100vh;
-		margin: 0;
-		background: var(--vscode-editor-background);
-		color: var(--vscode-editor-foreground);
-		font-family: var(--vscode-font-family);
-		font-size: var(--vscode-font-size);
-	}
+  body {
+    min-height: 100vh;
+    margin: 0;
+    background: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+  }
 
-	button,
-	input,
-	select,
-	textarea {
-		font: inherit;
-	}
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
 
-	button {
-		cursor: pointer;
-	}
+  button {
+    cursor: pointer;
+  }
 }
 
 @layer components {
-	.input-control {
-		@apply w-full rounded border border-[var(--vscode-input-border)] bg-[var(--vscode-input-background)] px-2.5 py-2 font-mono text-xs text-[var(--vscode-input-foreground)] outline-none placeholder:text-[var(--vscode-input-placeholderForeground)] focus:border-[var(--vscode-focusBorder)] focus:ring-1 focus:ring-[var(--vscode-focusBorder)];
-	}
+  .input-control {
+    @apply w-full rounded border border-[var(--vscode-input-border)] bg-[var(--vscode-input-background)] px-2.5 py-2 font-mono text-xs text-[var(--vscode-input-foreground)] outline-none placeholder:text-[var(--vscode-input-placeholderForeground)] focus:border-[var(--vscode-focusBorder)] focus:ring-1 focus:ring-[var(--vscode-focusBorder)];
+  }
 }

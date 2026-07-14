@@ -1,60 +1,34 @@
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
 
 export class SimpleAmitWebviewPanel {
-	private panel: vscode.WebviewPanel | undefined;
+  private panel: vscode.WebviewPanel | undefined;
 
-	constructor(private readonly context: vscode.ExtensionContext) {}
+  constructor(private readonly context: vscode.ExtensionContext) {}
 
-	show() {
-		if (this.panel !== undefined) {
-			this.panel.reveal(vscode.ViewColumn.One);
-			return;
-		}
+  show() {
+    if (this.panel !== undefined) {
+      this.panel.reveal(vscode.ViewColumn.One);
+      return;
+    }
 
-		this.panel = vscode.window.createWebviewPanel(
-			'simpleAmitSettings',
-			'Simple Amit',
-			vscode.ViewColumn.One,
-			{
-				enableScripts: true,
-				localResourceRoots: [
-					vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'webview'),
-				],
-			},
-		);
-		this.panel.iconPath = vscode.Uri.joinPath(
-			this.context.extensionUri,
-			'resources',
-			'brand',
-			'simple-amit-mark.svg',
-		);
+    this.panel = vscode.window.createWebviewPanel("simpleAmitSettings", "Simple Amit", vscode.ViewColumn.One, {
+      enableScripts: true,
+      localResourceRoots: [vscode.Uri.joinPath(this.context.extensionUri, "dist", "webview")]
+    });
+    this.panel.iconPath = vscode.Uri.joinPath(this.context.extensionUri, "resources", "brand", "simple-amit-mark.svg");
 
-		this.panel.webview.html = this.renderHtml(this.panel.webview);
-		this.panel.onDidDispose(() => {
-			this.panel = undefined;
-		});
-	}
+    this.panel.webview.html = this.renderHtml(this.panel.webview);
+    this.panel.onDidDispose(() => {
+      this.panel = undefined;
+    });
+  }
 
-	private renderHtml(webview: vscode.Webview) {
-		const nonce = getNonce();
-		const scriptUri = webview.asWebviewUri(
-			vscode.Uri.joinPath(
-				this.context.extensionUri,
-				'dist',
-				'webview',
-				'webview.js',
-			),
-		);
-		const styleUri = webview.asWebviewUri(
-			vscode.Uri.joinPath(
-				this.context.extensionUri,
-				'dist',
-				'webview',
-				'webview.css',
-			),
-		);
+  private renderHtml(webview: vscode.Webview) {
+    const nonce = getNonce();
+    const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, "dist", "webview", "webview.js"));
+    const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, "dist", "webview", "webview.css"));
 
-		return `<!DOCTYPE html>
+    return `<!DOCTYPE html>
 <html lang="en">
 	<head>
 		<meta charset="UTF-8">
@@ -68,15 +42,14 @@ export class SimpleAmitWebviewPanel {
 		<script nonce="${nonce}" type="module" src="${scriptUri.toString()}"></script>
 	</body>
 </html>`;
-	}
+  }
 }
 
 function getNonce() {
-	const chars =
-		'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-	let nonce = '';
-	for (let index = 0; index < 32; index += 1) {
-		nonce += chars.charAt(Math.floor(Math.random() * chars.length));
-	}
-	return nonce;
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let nonce = "";
+  for (let index = 0; index < 32; index += 1) {
+    nonce += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return nonce;
 }
