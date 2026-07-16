@@ -1,4 +1,8 @@
 import * as vscode from "vscode";
+import { getDefaultCommitSettings } from "./providers/compatibleProviderRegistry";
+import { BridgeMethod, type BridgeHandlers } from "./shared/webviewProtocol";
+import { WebviewHostBridge } from "./webviewHostBridge";
+import type { CommitSettings } from "./shared/commitSettings";
 
 export class SimpleAmitWebviewPanel {
   private panel: vscode.WebviewPanel | undefined;
@@ -18,9 +22,23 @@ export class SimpleAmitWebviewPanel {
     this.panel.iconPath = vscode.Uri.joinPath(this.context.extensionUri, "resources", "brand", "simple-amit-mark.svg");
 
     this.panel.webview.html = this.renderHtml(this.panel.webview);
+    const bridge = new WebviewHostBridge(this.panel.webview, this.createBridgeHandlers());
     this.panel.onDidDispose(() => {
+      bridge.dispose();
       this.panel = undefined;
     });
+  }
+
+  private createBridgeHandlers(): BridgeHandlers {
+    return {
+      [BridgeMethod.GetInitialState]: () => ({
+        settings: this.getInitialSettings()
+      })
+    };
+  }
+
+  private getInitialSettings(): CommitSettings {
+    return getDefaultCommitSettings();
   }
 
   private renderHtml(webview: vscode.Webview) {

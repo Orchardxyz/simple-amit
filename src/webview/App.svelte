@@ -2,17 +2,25 @@
 
 <script lang="ts">
 	import brandMarkUrl from '../../resources/brand/simple-amit-mark.svg?url';
-	import { compatibleProviders, defaultCommitSettings } from '../shared/commitSettings';
+	import { BridgeMethod } from '../shared/webviewProtocol';
 	import CommitMessageSettings from './components/CommitMessageSettings.svelte';
 	import ModelPickerDialog from './components/ModelPickerDialog.svelte';
 	import ProviderSettings from './components/ProviderSettings.svelte';
 	import Button from './components/ui/Button.svelte';
+	import { compatibleProviders, defaultCommitSettings } from './lib/compatibleProviders';
 	import { getStaticModelOptions } from './lib/modelOptions';
+	import type { WebviewBridge } from './bridge';
+
+	type Props = {
+		bridge: WebviewBridge;
+	};
+
+	let { bridge }: Props = $props();
 
 	let settings = $state({ ...defaultCommitSettings });
 	let apiKey = $state('');
 	let modelPickerOpen = $state(false);
-	let saveStatus = $state('Unsaved changes');
+	let saveStatus = $state('Loading settings…');
 
 	let currentCompatibleProvider = $derived(
 		compatibleProviders.find(provider => provider.id === settings.compatibleProviderId) ??
@@ -35,6 +43,20 @@
 	function saveSettings() {
 		saveStatus = 'Settings saved';
 	}
+
+	async function loadInitialState() {
+		try {
+			const initialState = await bridge.request(BridgeMethod.GetInitialState);
+			settings = { ...initialState.settings };
+			saveStatus = 'Settings loaded';
+		} catch {
+			saveStatus = 'Unable to load settings';
+		}
+	}
+
+	$effect(() => {
+		void loadInitialState();
+	});
 </script>
 
 <main class="mx-auto w-full max-w-4xl px-5 py-7 sm:px-8 sm:py-10">

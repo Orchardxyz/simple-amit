@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { Bot, RefreshCw } from '@lucide/svelte';
 	import {
-		compatibleProviders,
 		type CommitSettings,
 		type ProviderType,
 	} from '../../shared/commitSettings';
+	import { compatibleProviders } from '../lib/compatibleProviders';
 	import Button from './ui/Button.svelte';
 	import FormField from './ui/FormField.svelte';
 	import SegmentedControl from './ui/SegmentedControl.svelte';
