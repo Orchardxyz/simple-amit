@@ -6,16 +6,16 @@
 	import SettingsSection from './ui/SettingsSection.svelte';
 
 	type Props = {
-		onchange: () => void;
+		onChange: () => void;
 		settings: CommitSettings;
 	};
 
-	let { onchange, settings = $bindable() }: Props = $props();
+	let { onChange, settings = $bindable() }: Props = $props();
 	let sectionOpen = $state(true);
 
 	function updateSettings(changes: Partial<CommitSettings>) {
 		settings = { ...settings, ...changes };
-		onchange();
+		onChange();
 	}
 </script>
 
@@ -32,7 +32,7 @@
 					{ value: 'zh-CN', label: '简体中文' },
 					{ value: 'en', label: 'English' },
 				]}
-				onchange={onchange}
+				onChange={onChange}
 			/>
 			<p class="mt-1.5 text-[11px] leading-4 text-[var(--vscode-descriptionForeground)]">
 				Used by the Source Control command.

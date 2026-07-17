@@ -154,20 +154,20 @@
 			bind:apiKey
 			apiKeyHasSavedKey={apiKeyStatus.hasSavedKey}
 			disabled={requestInFlight}
-			onclearapikey={() => void clearApiKey()}
-			onprovidersecretchange={nextSettings => void refreshApiKeyStatus(nextSettings)}
-			onchange={markUnsaved}
-			onopenmodelpicker={() => (modelPickerOpen = true)}
+			onClearApiKey={() => void clearApiKey()}
+			onProviderSecretChange={nextSettings => void refreshApiKeyStatus(nextSettings)}
+			onChange={markUnsaved}
+			onOpenModelPicker={() => (modelPickerOpen = true)}
 		/>
 
-		<CommitMessageSettings bind:settings onchange={markUnsaved} />
+		<CommitMessageSettings bind:settings onChange={markUnsaved} />
 
 		<footer
 			class="flex flex-col-reverse items-start justify-between gap-3 border-t border-[var(--vscode-panel-border)] bg-[var(--vscode-sideBar-background)] px-5 py-4 sm:flex-row sm:items-center sm:px-7"
 		>
 			<span class="text-xs text-[var(--vscode-descriptionForeground)]" aria-live="polite">{saveStatus}</span>
 			<div class="flex items-center gap-2">
-				<Button type="button" disabled={requestInFlight} onclick={() => void resetSettings()}>Reset</Button>
+				<Button type="button" disabled={requestInFlight} onClick={() => void resetSettings()}>Reset</Button>
 				<Button variant="primary" disabled={requestInFlight} type="submit">Save settings</Button>
 			</div>
 		</footer>
@@ -178,8 +178,8 @@
 	bind:open={modelPickerOpen}
 	description={settings.providerType === 'compatible'
 		? `${currentCompatibleProvider.displayName.toUpperCase()} · ${settings.baseUrl.replace(/\/$/, '')}/models`
-		: `${settings.providerType.toUpperCase()} · provider model list`}
+	: `${settings.providerType.toUpperCase()} · provider model list`}
 	models={availableModels}
 	bind:selectedModel={settings.model}
-	onselect={markUnsaved}
+	onSelect={markUnsaved}
 />

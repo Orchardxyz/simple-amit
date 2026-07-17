@@ -14,11 +14,11 @@
 		apiKey?: string;
 		apiKeyHasSavedKey: boolean;
 		disabled?: boolean;
-		onclearapikey: () => void;
-		onchange: () => void;
-		onopenmodelpicker: () => void;
+		onChange: () => void;
+		onClearApiKey: () => void;
+		onOpenModelPicker: () => void;
 		// eslint-disable-next-line no-unused-vars
-		onprovidersecretchange: (settings: CommitSettings) => void;
+		onProviderSecretChange: (settings: CommitSettings) => void;
 		settings: CommitSettings;
 	};
 
@@ -26,10 +26,10 @@
 		apiKey = $bindable(''),
 		apiKeyHasSavedKey,
 		disabled = false,
-		onclearapikey,
-		onchange,
-		onopenmodelpicker,
-		onprovidersecretchange,
+		onChange,
+		onClearApiKey,
+		onOpenModelPicker,
+		onProviderSecretChange,
 		settings = $bindable(),
 	}: Props = $props();
 
@@ -43,14 +43,14 @@
 	function updateSettings(changes: Partial<CommitSettings>) {
 		const nextSettings = { ...settings, ...changes };
 		settings = nextSettings;
-		onchange();
+		onChange();
 		return nextSettings;
 	}
 
 	function selectProviderType(value: string) {
 		const providerType = value as ProviderType;
 		const nextSettings = updateSettings({ providerType, model: '' });
-		onprovidersecretchange(nextSettings);
+		onProviderSecretChange(nextSettings);
 	}
 
 	function selectCompatibleProvider() {
@@ -58,7 +58,7 @@
 			baseUrl: currentCompatibleProvider.baseUrl,
 			model: '',
 		});
-		onprovidersecretchange(nextSettings);
+		onProviderSecretChange(nextSettings);
 	}
 </script>
 
@@ -73,7 +73,7 @@
 			{ value: 'gemini', label: 'Gemini' },
 			{ value: 'compatible', label: 'OpenAI-Compatible' },
 		]}
-		onchange={() => selectProviderType(settings.providerType)}
+		onChange={() => selectProviderType(settings.providerType)}
 	/>
 
 	<div class="mt-6 grid gap-x-5 gap-y-5 md:grid-cols-2">
@@ -118,7 +118,7 @@
 					class="input-control pr-10"
 					type={showApiKey ? 'text' : 'password'}
 					bind:value={apiKey}
-					oninput={onchange}
+					oninput={onChange}
 					autocomplete="off"
 					placeholder={apiKeyHasSavedKey ? 'API key saved' : 'Enter API key'}
 				/>
@@ -127,7 +127,7 @@
 					variant="ghost"
 					size="icon"
 					type="button"
-					onclick={() => (showApiKey = !showApiKey)}
+					onClick={() => (showApiKey = !showApiKey)}
 					aria-label={showApiKey ? 'Hide API key' : 'Show API key'}
 				>
 					{#if showApiKey}◉{:else}○{/if}
@@ -138,7 +138,7 @@
 					{apiKeyHasSavedKey ? 'Saved for current provider' : 'No key saved for current provider'}
 				</span>
 				{#if apiKeyHasSavedKey}
-					<Button type="button" disabled={disabled} onclick={onclearapikey}>Clear key</Button>
+					<Button type="button" disabled={disabled} onClick={onClearApiKey}>Clear key</Button>
 				{/if}
 			</span>
 		</FormField>
@@ -154,7 +154,7 @@
 						placeholder="Select a model"
 						spellcheck="false"
 					/>
-					<Button type="button" onclick={onopenmodelpicker}>
+					<Button type="button" onClick={onOpenModelPicker}>
 						<RefreshCw size={14} strokeWidth={1.8} aria-hidden="true" />
 						Fetch models
 					</Button>

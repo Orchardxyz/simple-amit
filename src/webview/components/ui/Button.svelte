@@ -9,7 +9,7 @@
 		children?: Snippet;
 		class?: string;
 		disabled?: boolean;
-		onclick?: () => void;
+		onClick?: () => void;
 		variant?: ButtonVariant;
 		size?: ButtonSize;
 		type?: 'button' | 'reset' | 'submit';
@@ -22,7 +22,7 @@
 		class: className = '',
 		'aria-label': ariaLabel,
 		disabled,
-		onclick,
+		onClick,
 		type = 'button',
 	}: Props = $props();
 
@@ -40,7 +40,7 @@
 <button
 	class={`inline-flex shrink-0 items-center justify-center gap-1 rounded text-xs outline-none transition-colors focus-visible:ring-1 focus-visible:ring-[var(--vscode-focusBorder)] disabled:cursor-not-allowed disabled:opacity-50 ${variantClass} ${sizeClass} ${className}`}
 	{disabled}
-	{onclick}
+	onclick={onClick}
 	{type}
 	aria-label={ariaLabel}
 >

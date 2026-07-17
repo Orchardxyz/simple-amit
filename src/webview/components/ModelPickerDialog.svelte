@@ -6,7 +6,7 @@
 	type Props = {
 		description: string;
 		models: readonly string[];
-		onselect: () => void;
+		onSelect: () => void;
 		open?: boolean;
 		selectedModel?: string;
 	};
@@ -14,7 +14,7 @@
 	let {
 		description,
 		models,
-		onselect,
+		onSelect,
 		open = $bindable(false),
 		selectedModel = $bindable(''),
 	}: Props = $props();
@@ -33,7 +33,7 @@
 
 	async function chooseModel() {
 		selectedModel = pendingModel;
-		onselect();
+		onSelect();
 		open = false;
 		await tick();
 	}
@@ -45,8 +45,8 @@
 			{models.length} models in the static list
 		</span>
 		<div class="flex gap-2">
-			<Button type="button" onclick={() => (open = false)}>Cancel</Button>
-			<Button variant="primary" type="button" onclick={chooseModel}>Use model</Button>
+			<Button type="button" onClick={() => (open = false)}>Cancel</Button>
+			<Button variant="primary" type="button" onClick={chooseModel}>Use model</Button>
 		</div>
 	</div>
 {/snippet}

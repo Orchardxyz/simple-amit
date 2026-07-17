@@ -6,16 +6,16 @@
 
 	type Props = {
 		label: string;
-		onchange?: () => void;
+		onChange?: () => void;
 		options: Option[];
 		value?: string;
 	};
 
-	let { label, onchange, options, value = $bindable('') }: Props = $props();
+	let { label, onChange, options, value = $bindable('') }: Props = $props();
 
 	function select(valueToSelect: string) {
 		value = valueToSelect;
-		onchange?.();
+		onChange?.();
 	}
 </script>
 
