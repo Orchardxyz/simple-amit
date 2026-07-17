@@ -19,9 +19,11 @@
 
 	let settings = $state({ ...defaultCommitSettings });
 	let apiKey = $state('');
+	let apiKeyStatus = $state({ hasSavedKey: false });
 	let modelPickerOpen = $state(false);
 	let saveStatus = $state('Loading settings…');
 	let requestInFlight = $state(false);
+	let apiKeyRequestNumber = 0;
 
 	let currentCompatibleProvider = $derived(
 		compatibleProviders.find(provider => provider.id === settings.compatibleProviderId) ??
@@ -42,6 +44,8 @@
 		try {
 			const resetState = await bridge.request(BridgeMethod.ResetSettings);
 			settings = { ...resetState.settings };
+			apiKey = '';
+			apiKeyStatus = { ...resetState.apiKey };
 			saveStatus = 'Defaults restored';
 		} catch {
 			saveStatus = 'Unable to reset settings';
@@ -57,7 +61,19 @@
 		try {
 			const savedState = await bridge.request(BridgeMethod.SaveSettings, settings);
 			settings = { ...savedState.settings };
-			saveStatus = 'Settings saved';
+			apiKeyStatus = { ...savedState.apiKey };
+
+			if (apiKey.trim().length > 0) {
+				const savedApiKeyState = await bridge.request(BridgeMethod.SaveApiKey, {
+					apiKey,
+					settings: savedState.settings,
+				});
+				apiKey = '';
+				apiKeyStatus = { ...savedApiKeyState.apiKey };
+				saveStatus = 'Settings and API key saved';
+			} else {
+				saveStatus = 'Settings saved';
+			}
 		} catch {
 			saveStatus = 'Unable to save settings';
 		} finally {
@@ -71,11 +87,47 @@
 		try {
 			const initialState = await bridge.request(BridgeMethod.GetInitialState);
 			settings = { ...initialState.settings };
+			apiKey = '';
+			apiKeyStatus = { ...initialState.apiKey };
 			saveStatus = 'Settings loaded';
 		} catch {
 			saveStatus = 'Unable to load settings';
 		} finally {
 			requestInFlight = false;
+		}
+	}
+
+	async function clearApiKey() {
+		requestInFlight = true;
+		saveStatus = 'Clearing API key…';
+
+		try {
+			const clearedState = await bridge.request(BridgeMethod.ClearApiKey, settings);
+			apiKey = '';
+			apiKeyStatus = { ...clearedState.apiKey };
+			saveStatus = 'API key cleared';
+		} catch {
+			saveStatus = 'Unable to clear API key';
+		} finally {
+			requestInFlight = false;
+		}
+	}
+
+	async function refreshApiKeyStatus(providerSettings = settings) {
+		const requestNumber = apiKeyRequestNumber + 1;
+		apiKeyRequestNumber = requestNumber;
+
+		try {
+			const status = await bridge.request(BridgeMethod.GetApiKeyStatus, providerSettings);
+
+			if (requestNumber === apiKeyRequestNumber) {
+				apiKey = '';
+				apiKeyStatus = { ...status.apiKey };
+			}
+		} catch {
+			if (requestNumber === apiKeyRequestNumber) {
+				apiKeyStatus = { hasSavedKey: false };
+			}
 		}
 	}
 
@@ -100,6 +152,10 @@
 		<ProviderSettings
 			bind:settings
 			bind:apiKey
+			apiKeyHasSavedKey={apiKeyStatus.hasSavedKey}
+			disabled={requestInFlight}
+			onclearapikey={() => void clearApiKey()}
+			onprovidersecretchange={nextSettings => void refreshApiKeyStatus(nextSettings)}
 			onchange={markUnsaved}
 			onopenmodelpicker={() => (modelPickerOpen = true)}
 		/>

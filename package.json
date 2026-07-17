@@ -19,6 +19,14 @@
         "title": "Simple Amit: Open Webview"
       },
       {
+        "command": "simple-amit.setApiKey",
+        "title": "Simple Amit: Set API Key"
+      },
+      {
+        "command": "simple-amit.clearApiKey",
+        "title": "Simple Amit: Clear API Key"
+      },
+      {
         "command": "simple-amit.generateCommitMessage",
         "title": "Simple Amit: Generate Commit Message",
         "icon": {

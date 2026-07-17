@@ -9,6 +9,9 @@ import { isCommitSettings, type CommitSettings } from "./commitSettings";
  */
 export const BridgeMethod = {
   GetInitialState: "settings.getInitialState",
+  GetApiKeyStatus: "settings.getApiKeyStatus",
+  SaveApiKey: "settings.saveApiKey",
+  ClearApiKey: "settings.clearApiKey",
   SaveSettings: "settings.save",
   ResetSettings: "settings.reset"
 } as const;
@@ -23,7 +26,21 @@ export const BridgeErrorCode = {
 export type BridgeErrorCode = (typeof BridgeErrorCode)[keyof typeof BridgeErrorCode];
 
 export type InitialState = {
+  apiKey: ApiKeyState;
   settings: CommitSettings;
+};
+
+export type ApiKeyState = {
+  hasSavedKey: boolean;
+};
+
+export type SaveApiKeyParams = {
+  apiKey: string;
+  settings: CommitSettings;
+};
+
+export type ApiKeyStateResult = {
+  apiKey: ApiKeyState;
 };
 
 /**
@@ -33,6 +50,18 @@ export type BridgeContract = {
   [BridgeMethod.GetInitialState]: {
     params: undefined;
     result: InitialState;
+  };
+  [BridgeMethod.GetApiKeyStatus]: {
+    params: CommitSettings;
+    result: ApiKeyStateResult;
+  };
+  [BridgeMethod.SaveApiKey]: {
+    params: SaveApiKeyParams;
+    result: ApiKeyStateResult;
+  };
+  [BridgeMethod.ClearApiKey]: {
+    params: CommitSettings;
+    result: ApiKeyStateResult;
   };
   [BridgeMethod.SaveSettings]: {
     params: CommitSettings;
@@ -94,6 +123,11 @@ export function isBridgeRequest(message: unknown): message is BridgeRequest {
     case BridgeMethod.GetInitialState:
     case BridgeMethod.ResetSettings:
       return message.params === undefined;
+    case BridgeMethod.GetApiKeyStatus:
+    case BridgeMethod.ClearApiKey:
+      return isCommitSettings(message.params);
+    case BridgeMethod.SaveApiKey:
+      return isSaveApiKeyParams(message.params);
     case BridgeMethod.SaveSettings:
       return isCommitSettings(message.params);
     default:
@@ -115,6 +149,14 @@ export function isBridgeResponse(message: unknown): message is BridgeResponse {
 
 function isBridgeErrorCode(value: unknown): value is BridgeErrorCode {
   return value === BridgeErrorCode.InvalidMessage || value === BridgeErrorCode.Internal;
+}
+
+function isSaveApiKeyParams(value: unknown): value is SaveApiKeyParams {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return isCommitSettings(value.settings) && typeof value.apiKey === "string" && value.apiKey.trim().length > 0;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

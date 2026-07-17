@@ -1,12 +1,17 @@
 import * as vscode from "vscode";
 import { getCommitSettings, resetCommitSettings, saveCommitSettings } from "./settings/commitSettingsRepository";
-import { BridgeMethod, type BridgeHandlers } from "./shared/webviewProtocol";
+import { BridgeMethod, type BridgeHandlers, type InitialState } from "./shared/webviewProtocol";
 import { WebviewHostBridge } from "./webviewHostBridge";
+import type { ApiKeyStore } from "./settings/apiKeyStore";
+import type { CommitSettings } from "./shared/commitSettings";
 
 export class SimpleAmitWebviewPanel {
   private panel: vscode.WebviewPanel | undefined;
 
-  constructor(private readonly context: vscode.ExtensionContext) {}
+  constructor(
+    private readonly context: vscode.ExtensionContext,
+    private readonly apiKeyStore: ApiKeyStore
+  ) {}
 
   show() {
     if (this.panel !== undefined) {
@@ -30,15 +35,33 @@ export class SimpleAmitWebviewPanel {
 
   private createBridgeHandlers(): BridgeHandlers {
     return {
-      [BridgeMethod.GetInitialState]: () => ({
-        settings: getCommitSettings()
+      [BridgeMethod.GetInitialState]: () => this.createInitialState(getCommitSettings()),
+      [BridgeMethod.GetApiKeyStatus]: async (settings) => ({
+        apiKey: await this.getApiKeyState(settings)
       }),
-      [BridgeMethod.SaveSettings]: async (settings) => ({
-        settings: await saveCommitSettings(settings)
-      }),
-      [BridgeMethod.ResetSettings]: async () => ({
-        settings: await resetCommitSettings()
-      })
+      [BridgeMethod.SaveApiKey]: async ({ apiKey, settings }) => {
+        await this.apiKeyStore.saveApiKey(settings, apiKey);
+        return { apiKey: { hasSavedKey: true } };
+      },
+      [BridgeMethod.ClearApiKey]: async (settings) => {
+        await this.apiKeyStore.deleteApiKey(settings);
+        return { apiKey: { hasSavedKey: false } };
+      },
+      [BridgeMethod.SaveSettings]: async (settings) => this.createInitialState(await saveCommitSettings(settings)),
+      [BridgeMethod.ResetSettings]: async () => this.createInitialState(await resetCommitSettings())
+    };
+  }
+
+  private async createInitialState(settings: CommitSettings): Promise<InitialState> {
+    return {
+      apiKey: await this.getApiKeyState(settings),
+      settings
+    };
+  }
+
+  private async getApiKeyState(settings: CommitSettings) {
+    return {
+      hasSavedKey: await this.apiKeyStore.hasApiKey(settings)
     };
   }
 

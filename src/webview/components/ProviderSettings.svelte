@@ -12,15 +12,24 @@
 
 	type Props = {
 		apiKey?: string;
+		apiKeyHasSavedKey: boolean;
+		disabled?: boolean;
+		onclearapikey: () => void;
 		onchange: () => void;
 		onopenmodelpicker: () => void;
+		// eslint-disable-next-line no-unused-vars
+		onprovidersecretchange: (settings: CommitSettings) => void;
 		settings: CommitSettings;
 	};
 
 	let {
 		apiKey = $bindable(''),
+		apiKeyHasSavedKey,
+		disabled = false,
+		onclearapikey,
 		onchange,
 		onopenmodelpicker,
+		onprovidersecretchange,
 		settings = $bindable(),
 	}: Props = $props();
 
@@ -32,20 +41,24 @@
 	);
 
 	function updateSettings(changes: Partial<CommitSettings>) {
-		settings = { ...settings, ...changes };
+		const nextSettings = { ...settings, ...changes };
+		settings = nextSettings;
 		onchange();
+		return nextSettings;
 	}
 
 	function selectProviderType(value: string) {
 		const providerType = value as ProviderType;
-		updateSettings({ providerType, model: '' });
+		const nextSettings = updateSettings({ providerType, model: '' });
+		onprovidersecretchange(nextSettings);
 	}
 
 	function selectCompatibleProvider() {
-		updateSettings({
+		const nextSettings = updateSettings({
 			baseUrl: currentCompatibleProvider.baseUrl,
 			model: '',
 		});
+		onprovidersecretchange(nextSettings);
 	}
 </script>
 
@@ -107,7 +120,7 @@
 					bind:value={apiKey}
 					oninput={onchange}
 					autocomplete="off"
-					placeholder="Enter API key"
+					placeholder={apiKeyHasSavedKey ? 'API key saved' : 'Enter API key'}
 				/>
 				<Button
 					class="absolute inset-y-0 right-0 size-auto w-9 border-0 bg-transparent p-0 text-sm hover:bg-transparent"
@@ -120,6 +133,14 @@
 					{#if showApiKey}◉{:else}○{/if}
 				</Button>
 			</div>
+			<span class="mt-2 flex items-center justify-between gap-3 text-[11px] text-[var(--vscode-descriptionForeground)]">
+				<span>
+					{apiKeyHasSavedKey ? 'Saved for current provider' : 'No key saved for current provider'}
+				</span>
+				{#if apiKeyHasSavedKey}
+					<Button type="button" disabled={disabled} onclick={onclearapikey}>Clear key</Button>
+				{/if}
+			</span>
 		</FormField>
 
 		<FormField id="model" label="Model">
