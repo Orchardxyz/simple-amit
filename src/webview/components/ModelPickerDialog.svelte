@@ -5,18 +5,24 @@
 
 	type Props = {
 		description: string;
+		errorMessage?: string;
+		loading?: boolean;
 		models: readonly string[];
 		onSelect: () => void;
 		open?: boolean;
 		selectedModel?: string;
+		sourceLabel: string;
 	};
 
 	let {
 		description,
+		errorMessage = '',
+		loading = false,
 		models,
 		onSelect,
 		open = $bindable(false),
 		selectedModel = $bindable(''),
+		sourceLabel,
 	}: Props = $props();
 
 	let modelSearch = $state('');
@@ -42,11 +48,15 @@
 {#snippet footer()}
 	<div class="flex items-center justify-between gap-4">
 		<span class="text-[11px] text-[var(--vscode-descriptionForeground)]">
-			{models.length} models in the static list
+			{#if loading}
+				Fetching models…
+			{:else}
+				{models.length} models in the {sourceLabel}
+			{/if}
 		</span>
 		<div class="flex gap-2">
 			<Button type="button" onClick={() => (open = false)}>Cancel</Button>
-			<Button variant="primary" type="button" onClick={chooseModel}>Use model</Button>
+			<Button variant="primary" type="button" disabled={pendingModel.length === 0} onClick={chooseModel}>Use model</Button>
 		</div>
 	</div>
 {/snippet}
@@ -56,11 +66,17 @@
 		id="model-search"
 		class="input-control"
 		bind:value={modelSearch}
-		placeholder="Search fetched models…"
+		placeholder={loading ? 'Fetching models…' : 'Search models…'}
 		autocomplete="off"
+		disabled={loading}
 	/>
+	{#if errorMessage.length > 0}
+		<p class="m-0 mt-2 text-xs text-[var(--vscode-errorForeground)]">{errorMessage}</p>
+	{/if}
 	<div class="mt-3 max-h-60 overflow-auto rounded border border-[var(--vscode-panel-border)]">
-		{#if filteredModels.length > 0}
+		{#if loading}
+			<p class="m-0 px-3 py-4 text-xs text-[var(--vscode-descriptionForeground)]">Fetching provider models…</p>
+		{:else if filteredModels.length > 0}
 			{#each filteredModels as modelName (modelName)}
 				<button
 					class:selected-model={pendingModel === modelName}

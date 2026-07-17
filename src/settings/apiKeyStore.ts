@@ -5,6 +5,7 @@ const apiKeySecretPrefix = "simple-amit.apiKey";
 
 export type ApiKeyStore = {
   deleteApiKey(settings: CommitSettings): Promise<void>;
+  getApiKey(settings: CommitSettings): Promise<string | undefined>;
   hasApiKey(settings: CommitSettings): Promise<boolean>;
   saveApiKey(settings: CommitSettings, apiKey: string): Promise<void>;
 };
@@ -13,6 +14,10 @@ export function createApiKeyStore(secrets: vscode.SecretStorage): ApiKeyStore {
   return {
     async deleteApiKey(settings) {
       await secrets.delete(getApiKeySecretKey(settings));
+    },
+    async getApiKey(settings) {
+      const apiKey = await secrets.get(getApiKeySecretKey(settings));
+      return apiKey !== undefined && apiKey.length > 0 ? apiKey : undefined;
     },
     async hasApiKey(settings) {
       const apiKey = await secrets.get(getApiKeySecretKey(settings));

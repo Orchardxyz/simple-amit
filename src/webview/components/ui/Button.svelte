@@ -38,7 +38,7 @@
 </script>
 
 <button
-	class={`inline-flex shrink-0 items-center justify-center gap-1 rounded text-xs outline-none transition-colors focus-visible:ring-1 focus-visible:ring-[var(--vscode-focusBorder)] disabled:cursor-not-allowed disabled:opacity-50 ${variantClass} ${sizeClass} ${className}`}
+	class={`inline-flex shrink-0 items-center justify-center gap-1 rounded text-xs outline-none transition-colors focus-visible:ring-1 focus-visible:ring-[var(--vscode-focusBorder)] ${variantClass} ${sizeClass} ${className}`}
 	{disabled}
 	onclick={onClick}
 	{type}
@@ -46,3 +46,18 @@
 >
 	{@render children?.()}
 </button>
+
+<style>
+	button:disabled {
+		background: var(--vscode-input-background) !important;
+		border-color: var(--vscode-disabledForeground) !important;
+		color: var(--vscode-disabledForeground) !important;
+		cursor: not-allowed;
+		filter: grayscale(1);
+		opacity: 0.42;
+	}
+
+	button:not(:disabled) {
+		opacity: 1;
+	}
+</style>

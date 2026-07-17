@@ -21,9 +21,14 @@
 	let apiKey = $state('');
 	let apiKeyStatus = $state({ hasSavedKey: false });
 	let modelPickerOpen = $state(false);
+	let modelPickerError = $state('');
+	let modelPickerLoading = $state(false);
+	let modelPickerModels = $state<readonly string[]>([]);
+	let modelPickerSourceLabel = $state('static list');
 	let saveStatus = $state('Loading settings…');
 	let requestInFlight = $state(false);
 	let apiKeyRequestNumber = 0;
+	let modelListRequestNumber = 0;
 
 	let currentCompatibleProvider = $derived(
 		compatibleProviders.find(provider => provider.id === settings.compatibleProviderId) ??
@@ -37,6 +42,10 @@
 		saveStatus = 'Unsaved changes';
 	}
 
+	function getSettingsSnapshot() {
+		return { ...settings };
+	}
+
 	async function resetSettings() {
 		requestInFlight = true;
 		saveStatus = 'Resetting settings…';
@@ -44,7 +53,7 @@
 		try {
 			const resetState = await bridge.request(BridgeMethod.ResetSettings);
 			settings = { ...resetState.settings };
-			apiKey = '';
+			apiKey = resetState.apiKey.apiKey ?? '';
 			apiKeyStatus = { ...resetState.apiKey };
 			saveStatus = 'Defaults restored';
 		} catch {
@@ -55,11 +64,12 @@
 	}
 
 	async function saveSettings() {
+		const settingsSnapshot = getSettingsSnapshot();
 		requestInFlight = true;
 		saveStatus = 'Saving settings…';
 
 		try {
-			const savedState = await bridge.request(BridgeMethod.SaveSettings, settings);
+			const savedState = await bridge.request(BridgeMethod.SaveSettings, settingsSnapshot);
 			settings = { ...savedState.settings };
 			apiKeyStatus = { ...savedState.apiKey };
 
@@ -68,7 +78,7 @@
 					apiKey,
 					settings: savedState.settings,
 				});
-				apiKey = '';
+				apiKey = savedApiKeyState.apiKey.apiKey ?? apiKey;
 				apiKeyStatus = { ...savedApiKeyState.apiKey };
 				saveStatus = 'Settings and API key saved';
 			} else {
@@ -87,7 +97,7 @@
 		try {
 			const initialState = await bridge.request(BridgeMethod.GetInitialState);
 			settings = { ...initialState.settings };
-			apiKey = '';
+			apiKey = initialState.apiKey.apiKey ?? '';
 			apiKeyStatus = { ...initialState.apiKey };
 			saveStatus = 'Settings loaded';
 		} catch {
@@ -102,7 +112,7 @@
 		saveStatus = 'Clearing API key…';
 
 		try {
-			const clearedState = await bridge.request(BridgeMethod.ClearApiKey, settings);
+			const clearedState = await bridge.request(BridgeMethod.ClearApiKey, getSettingsSnapshot());
 			apiKey = '';
 			apiKeyStatus = { ...clearedState.apiKey };
 			saveStatus = 'API key cleared';
@@ -113,7 +123,7 @@
 		}
 	}
 
-	async function refreshApiKeyStatus(providerSettings = settings) {
+	async function refreshApiKeyStatus(providerSettings = getSettingsSnapshot()) {
 		const requestNumber = apiKeyRequestNumber + 1;
 		apiKeyRequestNumber = requestNumber;
 
@@ -121,12 +131,52 @@
 			const status = await bridge.request(BridgeMethod.GetApiKeyStatus, providerSettings);
 
 			if (requestNumber === apiKeyRequestNumber) {
-				apiKey = '';
+				apiKey = status.apiKey.apiKey ?? '';
 				apiKeyStatus = { ...status.apiKey };
 			}
 		} catch {
 			if (requestNumber === apiKeyRequestNumber) {
 				apiKeyStatus = { hasSavedKey: false };
+			}
+		}
+	}
+
+	async function openModelPicker() {
+		const requestSettings = getSettingsSnapshot();
+		const requestNumber = modelListRequestNumber + 1;
+		modelListRequestNumber = requestNumber;
+		modelPickerOpen = true;
+		modelPickerModels = availableModels;
+		modelPickerSourceLabel = 'static list';
+		modelPickerError = '';
+
+		if (requestSettings.providerType !== 'compatible') {
+			return;
+		}
+
+		modelPickerLoading = true;
+
+		try {
+			const result = await bridge.request(BridgeMethod.FetchModelList, {
+				settings: requestSettings,
+				apiKey: apiKey.trim().length > 0 ? apiKey : undefined,
+			});
+
+			if (requestNumber === modelListRequestNumber) {
+				modelPickerModels = result.models;
+				modelPickerSourceLabel = 'fetched list';
+			}
+		} catch {
+			if (requestNumber === modelListRequestNumber) {
+				modelPickerModels = availableModels;
+				modelPickerSourceLabel = 'static fallback';
+				modelPickerError = apiKeyStatus.hasSavedKey || apiKey.trim().length > 0
+					? 'Unable to fetch provider models. Showing the static fallback list.'
+					: 'Save or enter an API key to fetch provider models. Showing the static fallback list.';
+			}
+		} finally {
+			if (requestNumber === modelListRequestNumber) {
+				modelPickerLoading = false;
 			}
 		}
 	}
@@ -157,7 +207,7 @@
 			onClearApiKey={() => void clearApiKey()}
 			onProviderSecretChange={nextSettings => void refreshApiKeyStatus(nextSettings)}
 			onChange={markUnsaved}
-			onOpenModelPicker={() => (modelPickerOpen = true)}
+			onOpenModelPicker={() => void openModelPicker()}
 		/>
 
 		<CommitMessageSettings bind:settings onChange={markUnsaved} />
@@ -165,10 +215,16 @@
 		<footer
 			class="flex flex-col-reverse items-start justify-between gap-3 border-t border-[var(--vscode-panel-border)] bg-[var(--vscode-sideBar-background)] px-5 py-4 sm:flex-row sm:items-center sm:px-7"
 		>
-			<span class="text-xs text-[var(--vscode-descriptionForeground)]" aria-live="polite">{saveStatus}</span>
+			<span class="text-xs text-[var(--vscode-descriptionForeground)]" aria-live="polite">
+				{saveStatus}
+			</span>
 			<div class="flex items-center gap-2">
 				<Button type="button" disabled={requestInFlight} onClick={() => void resetSettings()}>Reset</Button>
-				<Button variant="primary" disabled={requestInFlight} type="submit">Save settings</Button>
+				<Button
+					variant="primary"
+					type="button"
+					onClick={() => void saveSettings()}
+				>Save settings</Button>
 			</div>
 		</footer>
 	</form>
@@ -179,7 +235,10 @@
 	description={settings.providerType === 'compatible'
 		? `${currentCompatibleProvider.displayName.toUpperCase()} · ${settings.baseUrl.replace(/\/$/, '')}/models`
 	: `${settings.providerType.toUpperCase()} · provider model list`}
-	models={availableModels}
+	errorMessage={modelPickerError}
+	loading={modelPickerLoading}
+	models={modelPickerModels}
 	bind:selectedModel={settings.model}
+	sourceLabel={modelPickerSourceLabel}
 	onSelect={markUnsaved}
 />

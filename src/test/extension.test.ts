@@ -1,8 +1,12 @@
 import * as assert from "assert";
+import { normalizeAgentOutput } from "../commit/commitMessageAgent";
+import { createWorkspaceDiffPayload } from "../commit/gitTools";
+import { createModelListUrl, fetchModelList } from "../providers/modelList";
 import { createApiKeyStore, getApiKeySecretKey } from "../settings/apiKeyStore";
 import { resolveCommitSettings } from "../settings/commitSettingsRepository";
 import { defaultInstructions } from "../shared/commitSettings";
 import { BridgeErrorCode, BridgeMethod, isBridgeRequest, isBridgeResponse } from "../shared/webviewProtocol";
+import type { SimpleGit, StatusResult } from "simple-git";
 import type * as vscode from "vscode";
 
 const validSettings = {
@@ -98,6 +102,33 @@ suite("Webview bridge protocol", () => {
     );
   });
 
+  test("accepts model-list fetch request shapes", () => {
+    assert.strictEqual(
+      isBridgeRequest({
+        type: "request",
+        id: "request-1",
+        method: BridgeMethod.FetchModelList,
+        params: {
+          apiKey: "secret-key",
+          settings: validSettings
+        }
+      }),
+      true
+    );
+
+    assert.strictEqual(
+      isBridgeRequest({
+        type: "request",
+        id: "request-2",
+        method: BridgeMethod.FetchModelList,
+        params: {
+          settings: validSettings
+        }
+      }),
+      true
+    );
+  });
+
   test("rejects invalid API-key request parameters", () => {
     assert.strictEqual(
       isBridgeRequest({
@@ -157,20 +188,24 @@ suite("Webview bridge protocol", () => {
     );
   });
 
-  test("accepts API-key status responses without secret values", () => {
+  test("accepts API-key status responses with secret values", () => {
     const response = {
       type: "response",
       id: "request-1",
       ok: true,
       result: {
         apiKey: {
+          apiKey: "secret-key",
           hasSavedKey: true
         }
       }
     } as const;
 
     assert.strictEqual(isBridgeResponse(response), true);
-    assert.deepStrictEqual(Object.keys(response.result.apiKey), ["hasSavedKey"]);
+    assert.deepStrictEqual(response.result.apiKey, {
+      apiKey: "secret-key",
+      hasSavedKey: true
+    });
   });
 
   test("accepts numeric error codes in failure responses", () => {
@@ -229,10 +264,12 @@ suite("API key store", () => {
 
     await apiKeyStore.saveApiKey(validSettings, "secret-key");
     assert.strictEqual(await apiKeyStore.hasApiKey(validSettings), true);
+    assert.strictEqual(await apiKeyStore.getApiKey(validSettings), "secret-key");
     assert.strictEqual(await secrets.get(getApiKeySecretKey(validSettings)), "secret-key");
 
     await apiKeyStore.deleteApiKey(validSettings);
     assert.strictEqual(await apiKeyStore.hasApiKey(validSettings), false);
+    assert.strictEqual(await apiKeyStore.getApiKey(validSettings), undefined);
   });
 
   test("uses distinct secret keys for each provider", () => {
@@ -242,6 +279,89 @@ suite("API key store", () => {
       getApiKeySecretKey({ ...validSettings, providerType: "compatible", compatibleProviderId: "deepseek" }),
       "simple-amit.apiKey.compatible:deepseek"
     );
+  });
+});
+
+suite("Commit message agent output", () => {
+  test("normalizes loose model JSON into the internal result shape", () => {
+    const result = normalizeAgentOutput(
+      {
+        commitMessage: "feat(settings): 支持读取已保存 API key"
+      },
+      "zh-CN"
+    );
+
+    assert.strictEqual(result.message, "feat(settings): 支持读取已保存 API key");
+    assert.strictEqual(result.diffScopeUsed, "all");
+    assert.strictEqual(result.languageVerdict.expectedLanguage, "zh-CN");
+    assert.strictEqual(result.languageVerdict.matches, true);
+  });
+});
+
+suite("Git diff tools", () => {
+  test("returns only staged diff data for staged scope", async () => {
+    const git = new FakeSimpleGit({
+      stagedDiff: "diff --git a/src/a.ts b/src/a.ts\n@@ -1 +1 @@\n-old\n+new",
+      stagedNumstat: "1\t1\tsrc/a.ts",
+      status: createFakeStatus({
+        staged: ["src/a.ts"],
+        modified: ["src/b.ts"]
+      }),
+      unstagedDiff: "diff --git a/src/b.ts b/src/b.ts\n@@ -1 +1 @@\n-old\n+new",
+      unstagedNumstat: "1\t1\tsrc/b.ts"
+    });
+
+    const payload = await createWorkspaceDiffPayload(git as unknown as SimpleGit, "staged");
+
+    assert.deepStrictEqual(
+      payload.files.map((file) => file.path),
+      ["src/a.ts"]
+    );
+    assert.strictEqual(payload.scope, "staged");
+    assert.strictEqual(payload.files[0].patch?.includes("src/a.ts"), true);
+  });
+
+  test("omits lockfile patches while keeping file summary", async () => {
+    const git = new FakeSimpleGit({
+      stagedDiff: "diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml\n@@ -1 +1 @@\n-old\n+new",
+      stagedNumstat: "1\t1\tpnpm-lock.yaml",
+      status: createFakeStatus({
+        staged: ["pnpm-lock.yaml"]
+      })
+    });
+
+    const payload = await createWorkspaceDiffPayload(git as unknown as SimpleGit, "staged");
+
+    assert.strictEqual(payload.files[0].path, "pnpm-lock.yaml");
+    assert.strictEqual(payload.files[0].omittedReason, "lockfile");
+    assert.strictEqual(payload.files[0].patch, undefined);
+  });
+});
+
+suite("Provider model list", () => {
+  test("builds OpenAI-compatible model-list URLs from provider settings", () => {
+    assert.strictEqual(
+      createModelListUrl({ ...validSettings, compatibleProviderId: "deepseek", baseUrl: "https://api.deepseek.com/" }),
+      "https://api.deepseek.com/models"
+    );
+  });
+
+  test("fetches and normalizes OpenAI-compatible model ids", async () => {
+    const result = await fetchModelList(
+      {
+        apiKey: "secret-key",
+        settings: { ...validSettings, compatibleProviderId: "deepseek", baseUrl: "https://api.deepseek.com" }
+      },
+      async () =>
+        new Response(
+          JSON.stringify({
+            data: [{ id: "deepseek-chat" }, { id: "deepseek-reasoner" }, { id: "deepseek-chat" }]
+          }),
+          { status: 200 }
+        )
+    );
+
+    assert.deepStrictEqual(result.models, ["deepseek-chat", "deepseek-reasoner"]);
   });
 });
 
@@ -267,4 +387,56 @@ class FakeSecretStorage implements vscode.SecretStorage {
   async store(key: string, value: string): Promise<void> {
     this.values.set(key, value);
   }
+}
+
+type FakeSimpleGitOptions = {
+  stagedDiff?: string;
+  stagedNumstat?: string;
+  status: StatusResult;
+  unstagedDiff?: string;
+  unstagedNumstat?: string;
+};
+
+class FakeSimpleGit {
+  constructor(private readonly options: FakeSimpleGitOptions) {}
+
+  async diff(args: string[] = []) {
+    if (args.includes("--cached") && args.includes("--numstat")) {
+      return this.options.stagedNumstat ?? "";
+    }
+
+    if (args.includes("--cached")) {
+      return this.options.stagedDiff ?? "";
+    }
+
+    if (args.includes("--numstat")) {
+      return this.options.unstagedNumstat ?? "";
+    }
+
+    return this.options.unstagedDiff ?? "";
+  }
+
+  async status() {
+    return this.options.status;
+  }
+}
+
+function createFakeStatus(overrides: Partial<StatusResult> = {}): StatusResult {
+  return {
+    ahead: 0,
+    behind: 0,
+    conflicted: [],
+    created: [],
+    current: "main",
+    deleted: [],
+    detached: false,
+    files: [],
+    isClean: () => false,
+    modified: [],
+    not_added: [],
+    renamed: [],
+    staged: [],
+    tracking: null,
+    ...overrides
+  };
 }

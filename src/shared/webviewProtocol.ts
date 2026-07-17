@@ -10,6 +10,7 @@ import { isCommitSettings, type CommitSettings } from "./commitSettings";
 export const BridgeMethod = {
   GetInitialState: "settings.getInitialState",
   GetApiKeyStatus: "settings.getApiKeyStatus",
+  FetchModelList: "models.fetch",
   SaveApiKey: "settings.saveApiKey",
   ClearApiKey: "settings.clearApiKey",
   SaveSettings: "settings.save",
@@ -31,6 +32,7 @@ export type InitialState = {
 };
 
 export type ApiKeyState = {
+  apiKey?: string;
   hasSavedKey: boolean;
 };
 
@@ -41,6 +43,15 @@ export type SaveApiKeyParams = {
 
 export type ApiKeyStateResult = {
   apiKey: ApiKeyState;
+};
+
+export type FetchModelListParams = {
+  apiKey?: string;
+  settings: CommitSettings;
+};
+
+export type ModelListResult = {
+  models: string[];
 };
 
 /**
@@ -54,6 +65,10 @@ export type BridgeContract = {
   [BridgeMethod.GetApiKeyStatus]: {
     params: CommitSettings;
     result: ApiKeyStateResult;
+  };
+  [BridgeMethod.FetchModelList]: {
+    params: FetchModelListParams;
+    result: ModelListResult;
   };
   [BridgeMethod.SaveApiKey]: {
     params: SaveApiKeyParams;
@@ -126,6 +141,8 @@ export function isBridgeRequest(message: unknown): message is BridgeRequest {
     case BridgeMethod.GetApiKeyStatus:
     case BridgeMethod.ClearApiKey:
       return isCommitSettings(message.params);
+    case BridgeMethod.FetchModelList:
+      return isFetchModelListParams(message.params);
     case BridgeMethod.SaveApiKey:
       return isSaveApiKeyParams(message.params);
     case BridgeMethod.SaveSettings:
@@ -157,6 +174,14 @@ function isSaveApiKeyParams(value: unknown): value is SaveApiKeyParams {
   }
 
   return isCommitSettings(value.settings) && typeof value.apiKey === "string" && value.apiKey.trim().length > 0;
+}
+
+function isFetchModelListParams(value: unknown): value is FetchModelListParams {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return isCommitSettings(value.settings) && (value.apiKey === undefined || typeof value.apiKey === "string");
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

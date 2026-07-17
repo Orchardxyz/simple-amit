@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { createGenerateCommitMessageCommand } from "./commit/commitMessageCommand";
 import { createApiKeyStore } from "./settings/apiKeyStore";
 import { getCommitSettings } from "./settings/commitSettingsRepository";
 import { SimpleAmitWebviewPanel } from "./webviewPanel";
@@ -33,9 +34,7 @@ export function activate(context: vscode.ExtensionContext) {
       await apiKeyStore.deleteApiKey(getCommitSettings());
       await vscode.window.showInformationMessage("Simple Amit API key cleared.");
     }),
-    vscode.commands.registerCommand("simple-amit.generateCommitMessage", () => {
-      vscode.window.showInformationMessage("Commit-message generation is coming soon.");
-    })
+    vscode.commands.registerCommand("simple-amit.generateCommitMessage", createGenerateCommitMessageCommand(apiKeyStore))
   );
 }
 

@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { fetchModelList } from "./providers/modelList";
 import { getCommitSettings, resetCommitSettings, saveCommitSettings } from "./settings/commitSettingsRepository";
 import { BridgeMethod, type BridgeHandlers, type InitialState } from "./shared/webviewProtocol";
 import { WebviewHostBridge } from "./webviewHostBridge";
@@ -39,16 +40,27 @@ export class SimpleAmitWebviewPanel {
       [BridgeMethod.GetApiKeyStatus]: async (settings) => ({
         apiKey: await this.getApiKeyState(settings)
       }),
+      [BridgeMethod.FetchModelList]: async ({ apiKey, settings }) =>
+        fetchModelList({
+          apiKey: apiKey ?? (await this.apiKeyStore.getApiKey(settings)),
+          settings
+        }),
       [BridgeMethod.SaveApiKey]: async ({ apiKey, settings }) => {
         await this.apiKeyStore.saveApiKey(settings, apiKey);
-        return { apiKey: { hasSavedKey: true } };
+        return { apiKey: { apiKey, hasSavedKey: true } };
       },
       [BridgeMethod.ClearApiKey]: async (settings) => {
         await this.apiKeyStore.deleteApiKey(settings);
         return { apiKey: { hasSavedKey: false } };
       },
-      [BridgeMethod.SaveSettings]: async (settings) => this.createInitialState(await saveCommitSettings(settings)),
-      [BridgeMethod.ResetSettings]: async () => this.createInitialState(await resetCommitSettings())
+      [BridgeMethod.SaveSettings]: async (settings) => {
+        const savedSettings = await saveCommitSettings(settings);
+        return this.createInitialState(savedSettings);
+      },
+      [BridgeMethod.ResetSettings]: async () => {
+        const resetSettings = await resetCommitSettings();
+        return this.createInitialState(resetSettings);
+      }
     };
   }
 
@@ -60,8 +72,11 @@ export class SimpleAmitWebviewPanel {
   }
 
   private async getApiKeyState(settings: CommitSettings) {
+    const apiKey = await this.apiKeyStore.getApiKey(settings);
+
     return {
-      hasSavedKey: await this.apiKeyStore.hasApiKey(settings)
+      apiKey,
+      hasSavedKey: apiKey !== undefined
     };
   }
 
