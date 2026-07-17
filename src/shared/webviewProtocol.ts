@@ -1,5 +1,5 @@
 /* eslint-disable import/newline-after-import */
-import type { CommitSettings } from "./commitSettings";
+import { isCommitSettings, type CommitSettings } from "./commitSettings";
 /* eslint-enable import/newline-after-import */
 
 /**
@@ -8,7 +8,9 @@ import type { CommitSettings } from "./commitSettings";
  * Keep callers on these constants instead of scattering protocol strings.
  */
 export const BridgeMethod = {
-  GetInitialState: "settings.getInitialState"
+  GetInitialState: "settings.getInitialState",
+  SaveSettings: "settings.save",
+  ResetSettings: "settings.reset"
 } as const;
 
 export type BridgeMethod = (typeof BridgeMethod)[keyof typeof BridgeMethod];
@@ -29,6 +31,14 @@ export type InitialState = {
  */
 export type BridgeContract = {
   [BridgeMethod.GetInitialState]: {
+    params: undefined;
+    result: InitialState;
+  };
+  [BridgeMethod.SaveSettings]: {
+    params: CommitSettings;
+    result: InitialState;
+  };
+  [BridgeMethod.ResetSettings]: {
     params: undefined;
     result: InitialState;
   };
@@ -82,7 +92,10 @@ export function isBridgeRequest(message: unknown): message is BridgeRequest {
 
   switch (message.method) {
     case BridgeMethod.GetInitialState:
+    case BridgeMethod.ResetSettings:
       return message.params === undefined;
+    case BridgeMethod.SaveSettings:
+      return isCommitSettings(message.params);
     default:
       return false;
   }

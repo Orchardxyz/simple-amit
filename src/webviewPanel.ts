@@ -1,8 +1,7 @@
 import * as vscode from "vscode";
-import { getDefaultCommitSettings } from "./providers/compatibleProviderRegistry";
+import { getCommitSettings, resetCommitSettings, saveCommitSettings } from "./settings/commitSettingsRepository";
 import { BridgeMethod, type BridgeHandlers } from "./shared/webviewProtocol";
 import { WebviewHostBridge } from "./webviewHostBridge";
-import type { CommitSettings } from "./shared/commitSettings";
 
 export class SimpleAmitWebviewPanel {
   private panel: vscode.WebviewPanel | undefined;
@@ -32,13 +31,15 @@ export class SimpleAmitWebviewPanel {
   private createBridgeHandlers(): BridgeHandlers {
     return {
       [BridgeMethod.GetInitialState]: () => ({
-        settings: this.getInitialSettings()
+        settings: getCommitSettings()
+      }),
+      [BridgeMethod.SaveSettings]: async (settings) => ({
+        settings: await saveCommitSettings(settings)
+      }),
+      [BridgeMethod.ResetSettings]: async () => ({
+        settings: await resetCommitSettings()
       })
     };
-  }
-
-  private getInitialSettings(): CommitSettings {
-    return getDefaultCommitSettings();
   }
 
   private renderHtml(webview: vscode.Webview) {

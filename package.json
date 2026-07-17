@@ -35,6 +35,50 @@
           "group": "navigation@1"
         }
       ]
+    },
+    "configuration": {
+      "title": "Simple Amit",
+      "properties": {
+        "simple-amit.providerType": {
+          "type": "string",
+          "enum": [
+            "anthropic",
+            "gemini",
+            "compatible"
+          ],
+          "default": "compatible",
+          "description": "AI provider family used to generate commit messages."
+        },
+        "simple-amit.compatibleProviderId": {
+          "type": "string",
+          "default": "openai",
+          "description": "Provider id from the OpenAI-compatible provider registry."
+        },
+        "simple-amit.baseUrl": {
+          "type": "string",
+          "default": "https://api.openai.com",
+          "description": "Base URL for OpenAI-compatible provider requests."
+        },
+        "simple-amit.model": {
+          "type": "string",
+          "default": "",
+          "description": "Model id used to generate commit messages."
+        },
+        "simple-amit.language": {
+          "type": "string",
+          "enum": [
+            "zh-CN",
+            "en"
+          ],
+          "default": "en",
+          "description": "Language used for generated commit messages."
+        },
+        "simple-amit.instructions": {
+          "type": "string",
+          "default": "Analyze the workspace changes as the source of truth. Learn the repository's commit-message format from recent Git history, including its language, type, scope, and tone. If history is insufficient or inconsistent, use Conventional Commits: type(scope): short subject. Choose a type that reflects the change; use style for visual-only changes. Return only one commit message in the selected language.",
+          "description": "Instructions appended to commit-message generation requests."
+        }
+      }
     }
   },
   "scripts": {
@@ -48,7 +92,7 @@
     "build:extension": "node esbuild.js",
     "build:webview": "vite build --config vite.webview.config.ts",
     "package": "pnpm run format:check && pnpm run check-types && pnpm run lint && pnpm run build:webview && node esbuild.js --production",
-    "compile-tests": "tsc -p . --outDir out",
+    "compile-tests": "tsc -p tsconfig.test.json",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
     "check:extension": "tsc --noEmit --project tsconfig.extension.json",

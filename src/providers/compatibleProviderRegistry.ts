@@ -3,10 +3,13 @@ import type * as CompatibleProviderRegistry from "openai-compatible-provider-reg
 
 type ProviderRegistry = typeof CompatibleProviderRegistry;
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const providerRegistry = require("openai-compatible-provider-registry") as unknown as ProviderRegistry;
+function getProviderRegistry(): ProviderRegistry {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  return require("openai-compatible-provider-registry") as unknown as ProviderRegistry;
+}
 
 export function getDefaultCommitSettings(): CommitSettings {
+  const providerRegistry = getProviderRegistry();
   const openAiProvider = providerRegistry.getProvider(providerRegistry.PROVIDER_IDS.OPENAI);
 
   if (openAiProvider === undefined) {

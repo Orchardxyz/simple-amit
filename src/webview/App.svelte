@@ -21,6 +21,7 @@
 	let apiKey = $state('');
 	let modelPickerOpen = $state(false);
 	let saveStatus = $state('Loading settings…');
+	let requestInFlight = $state(false);
 
 	let currentCompatibleProvider = $derived(
 		compatibleProviders.find(provider => provider.id === settings.compatibleProviderId) ??
@@ -34,23 +35,47 @@
 		saveStatus = 'Unsaved changes';
 	}
 
-	function resetSettings() {
-		settings = { ...defaultCommitSettings };
-		apiKey = '';
-		saveStatus = 'Defaults restored';
+	async function resetSettings() {
+		requestInFlight = true;
+		saveStatus = 'Resetting settings…';
+
+		try {
+			const resetState = await bridge.request(BridgeMethod.ResetSettings);
+			settings = { ...resetState.settings };
+			saveStatus = 'Defaults restored';
+		} catch {
+			saveStatus = 'Unable to reset settings';
+		} finally {
+			requestInFlight = false;
+		}
 	}
 
-	function saveSettings() {
-		saveStatus = 'Settings saved';
+	async function saveSettings() {
+		requestInFlight = true;
+		saveStatus = 'Saving settings…';
+
+		try {
+			const savedState = await bridge.request(BridgeMethod.SaveSettings, settings);
+			settings = { ...savedState.settings };
+			saveStatus = 'Settings saved';
+		} catch {
+			saveStatus = 'Unable to save settings';
+		} finally {
+			requestInFlight = false;
+		}
 	}
 
 	async function loadInitialState() {
+		requestInFlight = true;
+
 		try {
 			const initialState = await bridge.request(BridgeMethod.GetInitialState);
 			settings = { ...initialState.settings };
 			saveStatus = 'Settings loaded';
 		} catch {
 			saveStatus = 'Unable to load settings';
+		} finally {
+			requestInFlight = false;
 		}
 	}
 
@@ -69,7 +94,7 @@
 		class="overflow-hidden rounded-lg border border-[var(--vscode-panel-border)] bg-[var(--vscode-editorWidget-background)]"
 		onsubmit={event => {
 			event.preventDefault();
-			saveSettings();
+			void saveSettings();
 		}}
 	>
 		<ProviderSettings
@@ -86,8 +111,8 @@
 		>
 			<span class="text-xs text-[var(--vscode-descriptionForeground)]" aria-live="polite">{saveStatus}</span>
 			<div class="flex items-center gap-2">
-				<Button type="button" onclick={resetSettings}>Reset</Button>
-				<Button variant="primary" type="submit">Save settings</Button>
+				<Button type="button" disabled={requestInFlight} onclick={() => void resetSettings()}>Reset</Button>
+				<Button variant="primary" disabled={requestInFlight} type="submit">Save settings</Button>
 			</div>
 		</footer>
 	</form>
