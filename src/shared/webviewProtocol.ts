@@ -11,6 +11,7 @@ export const BridgeMethod = {
   GetInitialState: "settings.getInitialState",
   GetApiKeyStatus: "settings.getApiKeyStatus",
   FetchModelList: "models.fetch",
+  TestProviderConnection: "settings.testProviderConnection",
   SaveApiKey: "settings.saveApiKey",
   ClearApiKey: "settings.clearApiKey",
   SaveSettings: "settings.save",
@@ -54,6 +55,13 @@ export type ModelListResult = {
   models: string[];
 };
 
+export type TestProviderConnectionParams = FetchModelListParams;
+
+export type TestProviderConnectionResult = {
+  message: string;
+  ok: boolean;
+};
+
 /**
  * The single source of truth for each bridge method's input and output.
  */
@@ -69,6 +77,10 @@ export type BridgeContract = {
   [BridgeMethod.FetchModelList]: {
     params: FetchModelListParams;
     result: ModelListResult;
+  };
+  [BridgeMethod.TestProviderConnection]: {
+    params: TestProviderConnectionParams;
+    result: TestProviderConnectionResult;
   };
   [BridgeMethod.SaveApiKey]: {
     params: SaveApiKeyParams;
@@ -142,6 +154,7 @@ export function isBridgeRequest(message: unknown): message is BridgeRequest {
     case BridgeMethod.ClearApiKey:
       return isCommitSettings(message.params);
     case BridgeMethod.FetchModelList:
+    case BridgeMethod.TestProviderConnection:
       return isFetchModelListParams(message.params);
     case BridgeMethod.SaveApiKey:
       return isSaveApiKeyParams(message.params);

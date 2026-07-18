@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { testProviderConnection } from "./providers/connectionTest";
 import { fetchModelList } from "./providers/modelList";
 import { getCommitSettings, resetCommitSettings, saveCommitSettings } from "./settings/commitSettingsRepository";
 import { BridgeMethod, type BridgeHandlers, type InitialState } from "./shared/webviewProtocol";
@@ -42,6 +43,11 @@ export class SimpleAmitWebviewPanel {
       }),
       [BridgeMethod.FetchModelList]: async ({ apiKey, settings }) =>
         fetchModelList({
+          apiKey: apiKey ?? (await this.apiKeyStore.getApiKey(settings)),
+          settings
+        }),
+      [BridgeMethod.TestProviderConnection]: async ({ apiKey, settings }) =>
+        testProviderConnection({
           apiKey: apiKey ?? (await this.apiKeyStore.getApiKey(settings)),
           settings
         }),

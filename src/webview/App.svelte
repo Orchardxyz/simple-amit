@@ -7,9 +7,12 @@
 	import ModelPickerDialog from './components/ModelPickerDialog.svelte';
 	import ProviderSettings from './components/ProviderSettings.svelte';
 	import Button from './components/ui/Button.svelte';
+	import TooltipProvider from './components/ui/TooltipProvider.svelte';
+	import { getApiKeyDraft, saveApiKeyDraft, type ApiKeyDrafts } from './lib/apiKeyDrafts';
 	import { compatibleProviders, defaultCommitSettings } from './lib/compatibleProviders';
 	import { getStaticModelOptions } from './lib/modelOptions';
 	import type { WebviewBridge } from './bridge';
+	import type { CommitSettings } from '../shared/commitSettings';
 
 	type Props = {
 		bridge: WebviewBridge;
@@ -19,6 +22,7 @@
 
 	let settings = $state({ ...defaultCommitSettings });
 	let apiKey = $state('');
+	let apiKeyDrafts = $state<ApiKeyDrafts>({});
 	let apiKeyStatus = $state({ hasSavedKey: false });
 	let modelPickerOpen = $state(false);
 	let modelPickerError = $state('');
@@ -26,9 +30,13 @@
 	let modelPickerModels = $state<readonly string[]>([]);
 	let modelPickerSourceLabel = $state('static list');
 	let saveStatus = $state('Loading settings…');
+	let connectionTestLoading = $state(false);
+	let connectionTestMessage = $state('');
+	let connectionTestOk = $state<boolean | undefined>(undefined);
 	let requestInFlight = $state(false);
 	let apiKeyRequestNumber = 0;
 	let modelListRequestNumber = 0;
+	let connectionTestRequestNumber = 0;
 
 	let currentCompatibleProvider = $derived(
 		compatibleProviders.find(provider => provider.id === settings.compatibleProviderId) ??
@@ -40,10 +48,31 @@
 
 	function markUnsaved() {
 		saveStatus = 'Unsaved changes';
+		connectionTestMessage = '';
+		connectionTestOk = undefined;
 	}
 
 	function getSettingsSnapshot() {
 		return { ...settings };
+	}
+
+	function rememberApiKeyDraft(providerSettings = getSettingsSnapshot(), draftApiKey = apiKey) {
+		apiKeyDrafts = saveApiKeyDraft(apiKeyDrafts, providerSettings, draftApiKey);
+	}
+
+	function resetApiKeyDrafts(providerSettings: CommitSettings, draftApiKey: string) {
+		apiKeyDrafts = saveApiKeyDraft({}, providerSettings, draftApiKey);
+	}
+
+	function handleApiKeyChange(nextApiKey: string) {
+		apiKeyRequestNumber += 1;
+		rememberApiKeyDraft(getSettingsSnapshot(), nextApiKey);
+		markUnsaved();
+	}
+
+	function handleProviderSecretChange(nextSettings: CommitSettings, previousSettings: CommitSettings) {
+		rememberApiKeyDraft(previousSettings);
+		void refreshApiKeyStatus(nextSettings);
 	}
 
 	async function resetSettings() {
@@ -54,6 +83,7 @@
 			const resetState = await bridge.request(BridgeMethod.ResetSettings);
 			settings = { ...resetState.settings };
 			apiKey = resetState.apiKey.apiKey ?? '';
+			resetApiKeyDrafts(resetState.settings, apiKey);
 			apiKeyStatus = { ...resetState.apiKey };
 			saveStatus = 'Defaults restored';
 		} catch {
@@ -79,6 +109,7 @@
 					settings: savedState.settings,
 				});
 				apiKey = savedApiKeyState.apiKey.apiKey ?? apiKey;
+				rememberApiKeyDraft(savedState.settings, apiKey);
 				apiKeyStatus = { ...savedApiKeyState.apiKey };
 				saveStatus = 'Settings and API key saved';
 			} else {
@@ -98,6 +129,7 @@
 			const initialState = await bridge.request(BridgeMethod.GetInitialState);
 			settings = { ...initialState.settings };
 			apiKey = initialState.apiKey.apiKey ?? '';
+			resetApiKeyDrafts(initialState.settings, apiKey);
 			apiKeyStatus = { ...initialState.apiKey };
 			saveStatus = 'Settings loaded';
 		} catch {
@@ -114,6 +146,7 @@
 		try {
 			const clearedState = await bridge.request(BridgeMethod.ClearApiKey, getSettingsSnapshot());
 			apiKey = '';
+			rememberApiKeyDraft(getSettingsSnapshot(), '');
 			apiKeyStatus = { ...clearedState.apiKey };
 			saveStatus = 'API key cleared';
 		} catch {
@@ -126,16 +159,20 @@
 	async function refreshApiKeyStatus(providerSettings = getSettingsSnapshot()) {
 		const requestNumber = apiKeyRequestNumber + 1;
 		apiKeyRequestNumber = requestNumber;
+		const draftApiKey = getApiKeyDraft(apiKeyDrafts, providerSettings);
 
 		try {
 			const status = await bridge.request(BridgeMethod.GetApiKeyStatus, providerSettings);
 
 			if (requestNumber === apiKeyRequestNumber) {
-				apiKey = status.apiKey.apiKey ?? '';
+				apiKey = draftApiKey ?? status.apiKey.apiKey ?? '';
 				apiKeyStatus = { ...status.apiKey };
 			}
 		} catch {
 			if (requestNumber === apiKeyRequestNumber) {
+				if (draftApiKey !== undefined) {
+					apiKey = draftApiKey;
+				}
 				apiKeyStatus = { hasSavedKey: false };
 			}
 		}
@@ -181,11 +218,42 @@
 		}
 	}
 
+	async function testConnection() {
+		const requestSettings = getSettingsSnapshot();
+		const requestNumber = connectionTestRequestNumber + 1;
+		connectionTestRequestNumber = requestNumber;
+		connectionTestLoading = true;
+		connectionTestMessage = 'Testing provider connection…';
+		connectionTestOk = undefined;
+
+		try {
+			const result = await bridge.request(BridgeMethod.TestProviderConnection, {
+				settings: requestSettings,
+				apiKey: apiKey.trim().length > 0 ? apiKey : undefined,
+			});
+
+			if (requestNumber === connectionTestRequestNumber) {
+				connectionTestMessage = result.message;
+				connectionTestOk = result.ok;
+			}
+		} catch {
+			if (requestNumber === connectionTestRequestNumber) {
+				connectionTestMessage = 'Unable to test provider connection.';
+				connectionTestOk = false;
+			}
+		} finally {
+			if (requestNumber === connectionTestRequestNumber) {
+				connectionTestLoading = false;
+			}
+		}
+	}
+
 	$effect(() => {
 		void loadInitialState();
 	});
 </script>
 
+<TooltipProvider>
 <main class="mx-auto w-full max-w-4xl px-5 py-7 sm:px-8 sm:py-10">
 	<header class="mb-6 flex items-center gap-3">
 		<img class="size-8 rounded-md" src={brandMarkUrl} alt="" />
@@ -204,10 +272,15 @@
 			bind:apiKey
 			apiKeyHasSavedKey={apiKeyStatus.hasSavedKey}
 			disabled={requestInFlight}
+			connectionTestLoading={connectionTestLoading}
+			connectionTestMessage={connectionTestMessage}
+			connectionTestOk={connectionTestOk}
+			onApiKeyChange={handleApiKeyChange}
 			onClearApiKey={() => void clearApiKey()}
-			onProviderSecretChange={nextSettings => void refreshApiKeyStatus(nextSettings)}
+			onProviderSecretChange={handleProviderSecretChange}
 			onChange={markUnsaved}
 			onOpenModelPicker={() => void openModelPicker()}
+			onTestConnection={() => void testConnection()}
 		/>
 
 		<CommitMessageSettings bind:settings onChange={markUnsaved} />
@@ -229,6 +302,7 @@
 		</footer>
 	</form>
 </main>
+</TooltipProvider>
 
 <ModelPickerDialog
 	bind:open={modelPickerOpen}

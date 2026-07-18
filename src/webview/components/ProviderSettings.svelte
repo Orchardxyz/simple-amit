@@ -1,7 +1,10 @@
 <script lang="ts">
-	import { Bot, RefreshCw } from '@lucide/svelte';
+	import { Bot, Eye, EyeOff, PlugZap, RefreshCw, Trash2 } from '@lucide/svelte';
 	import {
+		getCurrentProviderModel,
+		saveCurrentProviderModel,
 		type CommitSettings,
+		type CompatibleProviderId,
 		type ProviderType,
 	} from '../../shared/commitSettings';
 	import { compatibleProviders } from '../lib/compatibleProviders';
@@ -9,27 +12,39 @@
 	import FormField from './ui/FormField.svelte';
 	import SegmentedControl from './ui/SegmentedControl.svelte';
 	import SettingsSection from './ui/SettingsSection.svelte';
+	import Tooltip from './ui/Tooltip.svelte';
 
 	type Props = {
 		apiKey?: string;
 		apiKeyHasSavedKey: boolean;
+		connectionTestLoading?: boolean;
+		connectionTestMessage?: string;
+		connectionTestOk?: boolean;
 		disabled?: boolean;
+		// eslint-disable-next-line no-unused-vars
+		onApiKeyChange: (apiKey: string) => void;
 		onChange: () => void;
 		onClearApiKey: () => void;
 		onOpenModelPicker: () => void;
 		// eslint-disable-next-line no-unused-vars
-		onProviderSecretChange: (settings: CommitSettings) => void;
+		onProviderSecretChange: (settings: CommitSettings, previousSettings: CommitSettings) => void;
+		onTestConnection: () => void;
 		settings: CommitSettings;
 	};
 
 	let {
 		apiKey = $bindable(''),
 		apiKeyHasSavedKey,
+		connectionTestLoading = false,
+		connectionTestMessage = '',
+		connectionTestOk,
 		disabled = false,
+		onApiKeyChange,
 		onChange,
 		onClearApiKey,
 		onOpenModelPicker,
 		onProviderSecretChange,
+		onTestConnection,
 		settings = $bindable(),
 	}: Props = $props();
 
@@ -47,19 +62,51 @@
 		return nextSettings;
 	}
 
-	function selectProviderType(value: string) {
-		const providerType = value as ProviderType;
-		const nextSettings = updateSettings({ providerType, model: '' });
-		onProviderSecretChange(nextSettings);
+	function updateProviderSelection(changes: Partial<CommitSettings>) {
+		const previousSettings = settings;
+		const settingsWithCurrentModel = {
+			...settings,
+			models: saveCurrentProviderModel(settings),
+		};
+		const nextSettingsWithoutResolvedModel = { ...settingsWithCurrentModel, ...changes };
+		const nextSettings = {
+			...nextSettingsWithoutResolvedModel,
+			model: getCurrentProviderModel(nextSettingsWithoutResolvedModel),
+		};
+
+		settings = nextSettings;
+		onChange();
+		onProviderSecretChange(nextSettings, previousSettings);
 	}
 
-	function selectCompatibleProvider() {
-		const nextSettings = updateSettings({
-			baseUrl: currentCompatibleProvider.baseUrl,
-			model: '',
-		});
-		onProviderSecretChange(nextSettings);
+	function selectProviderType(value: string) {
+		updateProviderSelection({ providerType: value as ProviderType });
 	}
+
+	function selectCompatibleProvider(providerId: CompatibleProviderId) {
+		const compatibleProvider = compatibleProviders.find(provider => provider.id === providerId) ?? compatibleProviders[0];
+
+		updateProviderSelection({
+			compatibleProviderId: compatibleProvider.id,
+			baseUrl: compatibleProvider.baseUrl,
+		});
+	}
+
+	let connectionStatusMessage = $derived(
+		connectionTestMessage.length > 0
+			? connectionTestMessage
+			: settings.providerType === 'compatible'
+				? `Ready to fetch from ${currentCompatibleProvider.displayName}.`
+				: 'Ready to test provider connection.',
+	);
+
+	let connectionStatusColor = $derived(
+		connectionTestLoading
+			? 'var(--vscode-progressBar-background)'
+			: connectionTestOk === false
+				? 'var(--vscode-errorForeground)'
+				: 'var(--vscode-testing-iconPassed)',
+	);
 </script>
 
 <SettingsSection bind:open={sectionOpen} icon={Bot} title="AI provider">
@@ -67,13 +114,13 @@
 
 	<SegmentedControl
 		label="AI provider type"
-		bind:value={settings.providerType}
+		value={settings.providerType}
 		options={[
 			{ value: 'anthropic', label: 'Anthropic' },
 			{ value: 'gemini', label: 'Gemini' },
 			{ value: 'compatible', label: 'OpenAI-Compatible' },
 		]}
-		onChange={() => selectProviderType(settings.providerType)}
+		onChange={selectProviderType}
 	/>
 
 	<div class="mt-6 grid gap-x-5 gap-y-5 md:grid-cols-2">
@@ -85,8 +132,8 @@
 				<select
 					id="compatible-provider"
 					class="input-control"
-					bind:value={settings.compatibleProviderId}
-					onchange={selectCompatibleProvider}
+					value={settings.compatibleProviderId}
+					onchange={event => selectCompatibleProvider(event.currentTarget.value as CompatibleProviderId)}
 				>
 					{#each compatibleProviders as provider (provider.id)}
 						<option value={provider.id}>{provider.displayName}</option>
@@ -112,67 +159,110 @@
 			id="api-key"
 			label="API key"
 		>
+			{#snippet action()}
+				{#if apiKeyHasSavedKey}
+					<Tooltip text="Clear API key">
+						{#snippet children(tooltipProps)}
+							<Button
+								{...tooltipProps}
+								type="button"
+								variant="ghost"
+								size="icon"
+								disabled={disabled}
+								onClick={onClearApiKey}
+								aria-label="Clear API key"
+							>
+								<Trash2 size={14} strokeWidth={1.8} aria-hidden="true" />
+							</Button>
+						{/snippet}
+					</Tooltip>
+				{/if}
+			{/snippet}
 			<div class="relative">
 				<input
 					id="api-key"
 					class="input-control pr-10"
 					type={showApiKey ? 'text' : 'password'}
-					bind:value={apiKey}
-					oninput={onChange}
+					value={apiKey}
+					oninput={event => {
+						apiKey = event.currentTarget.value;
+						onApiKeyChange(apiKey);
+					}}
 					autocomplete="off"
 					placeholder={apiKeyHasSavedKey ? 'API key saved' : 'Enter API key'}
 				/>
-				<Button
-					class="absolute inset-y-0 right-0 size-auto w-9 border-0 bg-transparent p-0 text-sm hover:bg-transparent"
-					variant="ghost"
-					size="icon"
-					type="button"
-					onClick={() => (showApiKey = !showApiKey)}
-					aria-label={showApiKey ? 'Hide API key' : 'Show API key'}
-				>
-					{#if showApiKey}◉{:else}○{/if}
-				</Button>
+				<Tooltip text={showApiKey ? 'Hide API key' : 'Show API key'}>
+					{#snippet children(tooltipProps)}
+						<Button
+							{...tooltipProps}
+							class="absolute inset-y-0 right-0 size-auto w-9 border-0 bg-transparent p-0 hover:bg-transparent"
+							variant="ghost"
+							size="icon"
+							type="button"
+							onClick={() => (showApiKey = !showApiKey)}
+							aria-label={showApiKey ? 'Hide API key' : 'Show API key'}
+						>
+							{#if showApiKey}
+								<EyeOff size={14} strokeWidth={1.8} aria-hidden="true" />
+							{:else}
+								<Eye size={14} strokeWidth={1.8} aria-hidden="true" />
+							{/if}
+						</Button>
+					{/snippet}
+				</Tooltip>
 			</div>
-			<span class="mt-2 flex items-center justify-between gap-3 text-[11px] text-[var(--vscode-descriptionForeground)]">
-				<span>
-					{apiKeyHasSavedKey ? 'Saved for current provider' : 'No key saved for current provider'}
-				</span>
-				{#if apiKeyHasSavedKey}
-					<Button type="button" disabled={disabled} onClick={onClearApiKey}>Clear key</Button>
-				{/if}
+			<span class="mt-2 text-[11px] text-[var(--vscode-descriptionForeground)]">
+				{apiKeyHasSavedKey ? 'Saved for current provider' : 'No key saved for current provider'}
 			</span>
 		</FormField>
 
 		<FormField id="model" label="Model">
-			{#if settings.providerType === 'compatible'}
-				<div class="flex gap-2">
-					<input
-						id="model"
-						class="input-control min-w-0 flex-1"
-						value={settings.model}
-						oninput={event => updateSettings({ model: event.currentTarget.value })}
-						placeholder="Select a model"
-						spellcheck="false"
-					/>
-					<Button type="button" onClick={onOpenModelPicker}>
-						<RefreshCw size={14} strokeWidth={1.8} aria-hidden="true" />
-						Fetch models
-					</Button>
-				</div>
-				<span class="mt-2 flex items-center gap-1.5 text-[11px] text-[var(--vscode-descriptionForeground)]">
-					<span class="size-1.5 rounded-full bg-[var(--vscode-testing-iconPassed)]" aria-hidden="true"></span>
-					Ready to fetch from {currentCompatibleProvider.displayName}.
-				</span>
-			{:else}
+			<div class="flex gap-2">
 				<input
 					id="model"
-					class="input-control"
+					class="input-control min-w-0 flex-1"
 					value={settings.model}
 					oninput={event => updateSettings({ model: event.currentTarget.value })}
-					placeholder="Enter a model ID"
+					placeholder={settings.providerType === 'compatible' ? 'Select a model' : 'Enter a model ID'}
 					spellcheck="false"
 				/>
-			{/if}
+				<Tooltip text="Test connection">
+					{#snippet children(tooltipProps)}
+						<Button
+							{...tooltipProps}
+							type="button"
+							variant="secondary"
+							size="icon"
+							disabled={disabled || connectionTestLoading}
+							onClick={onTestConnection}
+							aria-label="Test connection"
+						>
+							<PlugZap size={14} strokeWidth={1.8} aria-hidden="true" />
+						</Button>
+					{/snippet}
+				</Tooltip>
+				{#if settings.providerType === 'compatible'}
+					<Tooltip text="Fetch models">
+						{#snippet children(tooltipProps)}
+							<Button
+								{...tooltipProps}
+								type="button"
+								variant="secondary"
+								size="icon"
+								disabled={disabled}
+								onClick={onOpenModelPicker}
+								aria-label="Fetch models"
+							>
+								<RefreshCw size={14} strokeWidth={1.8} aria-hidden="true" />
+							</Button>
+						{/snippet}
+					</Tooltip>
+				{/if}
+			</div>
+			<span class="mt-2 flex items-center gap-1.5 text-[11px] text-[var(--vscode-descriptionForeground)]">
+				<span class="size-1.5 rounded-full" style:background-color={connectionStatusColor} aria-hidden="true"></span>
+				{connectionStatusMessage}
+			</span>
 		</FormField>
 	</div>
 	</div>

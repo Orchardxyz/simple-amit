@@ -8,6 +8,11 @@ suite("Provider model list", () => {
       createModelListUrl({ ...validSettings, compatibleProviderId: "deepseek", baseUrl: "https://api.deepseek.com/" }),
       "https://api.deepseek.com/models"
     );
+
+    assert.strictEqual(
+      createModelListUrl({ ...validSettings, compatibleProviderId: "openai", baseUrl: "https://api.openai.com" }),
+      "https://api.openai.com/v1/models"
+    );
   });
 
   test("fetches and normalizes OpenAI-compatible model ids", async () => {

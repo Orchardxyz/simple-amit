@@ -1,5 +1,5 @@
 import { getProvider, PROVIDER_IDS, PROVIDERS } from "openai-compatible-provider-registry";
-import { defaultInstructions, type CommitSettings } from "../../shared/commitSettings";
+import { createDefaultCommitProviderModels, defaultInstructions, type CommitSettings } from "../../shared/commitSettings";
 
 export const compatibleProviders = PROVIDERS;
 
@@ -14,6 +14,7 @@ export const defaultCommitSettings: CommitSettings = {
   compatibleProviderId: PROVIDER_IDS.OPENAI,
   baseUrl: openAiProvider.baseUrl,
   model: "",
+  models: createDefaultCommitProviderModels(),
   language: "en",
   instructions: defaultInstructions
 };

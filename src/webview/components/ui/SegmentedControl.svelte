@@ -6,7 +6,8 @@
 
 	type Props = {
 		label: string;
-		onChange?: () => void;
+		// eslint-disable-next-line no-unused-vars
+		onChange?: (value: string) => void;
 		options: Option[];
 		value?: string;
 	};
@@ -15,7 +16,7 @@
 
 	function select(valueToSelect: string) {
 		value = valueToSelect;
-		onChange?.();
+		onChange?.(valueToSelect);
 	}
 </script>
 

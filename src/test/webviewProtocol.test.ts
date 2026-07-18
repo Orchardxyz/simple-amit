@@ -113,6 +113,33 @@ suite("Webview bridge protocol", () => {
     );
   });
 
+  test("accepts provider connection test request shapes", () => {
+    assert.strictEqual(
+      isBridgeRequest({
+        type: "request",
+        id: "request-1",
+        method: BridgeMethod.TestProviderConnection,
+        params: {
+          apiKey: "secret-key",
+          settings: validSettings
+        }
+      }),
+      true
+    );
+
+    assert.strictEqual(
+      isBridgeRequest({
+        type: "request",
+        id: "request-2",
+        method: BridgeMethod.TestProviderConnection,
+        params: {
+          settings: validSettings
+        }
+      }),
+      true
+    );
+  });
+
   test("rejects invalid API-key request parameters", () => {
     assert.strictEqual(
       isBridgeRequest({

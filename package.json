@@ -67,10 +67,34 @@
           "default": "https://api.openai.com",
           "description": "Base URL for OpenAI-compatible provider requests."
         },
-        "simple-amit.model": {
-          "type": "string",
-          "default": "",
-          "description": "Model id used to generate commit messages."
+        "simple-amit.models": {
+          "type": "object",
+          "default": {
+            "anthropic": "",
+            "gemini": "",
+            "compatible": {}
+          },
+          "properties": {
+            "anthropic": {
+              "type": "string",
+              "default": "",
+              "description": "Model id used for Anthropic."
+            },
+            "gemini": {
+              "type": "string",
+              "default": "",
+              "description": "Model id used for Gemini."
+            },
+            "compatible": {
+              "type": "object",
+              "default": {},
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Model ids saved by OpenAI-compatible provider id."
+            }
+          },
+          "description": "Model ids saved per provider."
         },
         "simple-amit.language": {
           "type": "string",

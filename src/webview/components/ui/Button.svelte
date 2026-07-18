@@ -1,10 +1,12 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import type { HTMLButtonAttributes } from 'svelte/elements';
 
 	type ButtonVariant = 'primary' | 'secondary' | 'ghost';
 	type ButtonSize = 'default' | 'icon';
+	type ButtonClickEvent = Parameters<NonNullable<HTMLButtonAttributes['onclick']>>[0];
 
-	type Props = {
+	type Props = Omit<HTMLButtonAttributes, 'class' | 'disabled' | 'type'> & {
 		'aria-label'?: string;
 		children?: Snippet;
 		class?: string;
@@ -23,7 +25,9 @@
 		'aria-label': ariaLabel,
 		disabled,
 		onClick,
+		onclick,
 		type = 'button',
+		...restProps
 	}: Props = $props();
 
 	let variantClass = $derived(
@@ -35,12 +39,21 @@
 	);
 
 	let sizeClass = $derived(size === 'icon' ? 'size-7 p-0' : 'px-3 py-2');
+
+	function handleClick(event: ButtonClickEvent) {
+		onclick?.(event);
+
+		if (!event.defaultPrevented) {
+			onClick?.();
+		}
+	}
 </script>
 
 <button
+	{...restProps}
 	class={`inline-flex shrink-0 items-center justify-center gap-1 rounded text-xs outline-none transition-colors focus-visible:ring-1 focus-visible:ring-[var(--vscode-focusBorder)] ${variantClass} ${sizeClass} ${className}`}
 	{disabled}
-	onclick={onClick}
+	onclick={handleClick}
 	{type}
 	aria-label={ariaLabel}
 >

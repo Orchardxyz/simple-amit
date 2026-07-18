@@ -28,7 +28,7 @@ export async function fetchModelList({ apiKey, settings }: FetchModelListParams,
   const registry = getProviderRegistry();
   const result = await registry.fetchModels(settings.compatibleProviderId, {
     apiKey: resolvedApiKey,
-    baseUrl: settings.baseUrl.trim(),
+    baseUrl: normalizeCompatibleModelListBaseUrl(settings),
     fetch: fetchFn
   });
   const models = [...new Set(result.models.map((model) => model.id).filter((model) => model.trim().length > 0))].sort((left, right) =>
@@ -45,10 +45,20 @@ export async function fetchModelList({ apiKey, settings }: FetchModelListParams,
 export function createModelListUrl(settings: CommitSettings) {
   const provider = getProviderRegistry().getProvider(settings.compatibleProviderId);
   const modelsPath = provider?.modelsPath ?? "models";
-  const trimmedBaseUrl = settings.baseUrl.trim().replace(/\/$/, "");
+  const trimmedBaseUrl = normalizeCompatibleModelListBaseUrl(settings);
   const trimmedModelsPath = modelsPath.replace(/^\//, "");
 
   return `${trimmedBaseUrl}/${trimmedModelsPath}`;
+}
+
+function normalizeCompatibleModelListBaseUrl(settings: CommitSettings) {
+  const trimmedBaseUrl = settings.baseUrl.trim().replace(/\/$/, "");
+
+  if (settings.compatibleProviderId === "openai" && trimmedBaseUrl === "https://api.openai.com") {
+    return "https://api.openai.com/v1";
+  }
+
+  return trimmedBaseUrl;
 }
 
 function getProviderRegistry(): ProviderRegistry {

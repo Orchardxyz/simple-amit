@@ -6,6 +6,13 @@ export const validSettings = {
   compatibleProviderId: "openai",
   baseUrl: "https://api.openai.com",
   model: "gpt-4.1-mini",
+  models: {
+    anthropic: "",
+    gemini: "",
+    compatible: {
+      openai: "gpt-4.1-mini"
+    }
+  },
   language: "en",
   instructions: "Generate a concise commit message."
 } as const;
