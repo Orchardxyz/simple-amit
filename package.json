@@ -16,31 +16,39 @@
     "commands": [
       {
         "command": "simple-amit.openSettings",
-        "title": "Simple Amit: Open Webview"
-      },
-      {
-        "command": "simple-amit.setApiKey",
-        "title": "Simple Amit: Set API Key"
-      },
-      {
-        "command": "simple-amit.clearApiKey",
-        "title": "Simple Amit: Clear API Key"
+        "title": "Open Settings"
       },
       {
         "command": "simple-amit.generateCommitMessage",
-        "title": "Simple Amit: Generate Commit Message",
+        "title": "Generate Commit Message",
         "icon": {
           "light": "resources/icons/simple-amit-light.svg",
           "dark": "resources/icons/simple-amit-dark.svg"
         }
       }
     ],
+    "submenus": [
+      {
+        "id": "simple-amit.scmMenu",
+        "label": "Simple Amit"
+      }
+    ],
     "menus": {
       "scm/title": [
         {
-          "command": "simple-amit.generateCommitMessage",
+          "submenu": "simple-amit.scmMenu",
           "when": "scmProvider == git",
-          "group": "navigation@1"
+          "group": "simpleAmit@1"
+        }
+      ],
+      "simple-amit.scmMenu": [
+        {
+          "command": "simple-amit.generateCommitMessage",
+          "group": "simpleAmit@1"
+        },
+        {
+          "command": "simple-amit.openSettings",
+          "group": "simpleAmit@2"
         }
       ]
     },

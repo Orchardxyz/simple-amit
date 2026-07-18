@@ -71,7 +71,14 @@ export function createGenerateCommitMessageCommand(apiKeyStore: ApiKeyStore) {
       writeCommitMessage(repository, result.message);
       await vscode.window.showInformationMessage("Simple Amit generated a commit message.");
     } catch (error) {
-      await vscode.window.showErrorMessage(`Unable to generate a commit message with Simple Amit: ${getErrorMessage(error)}`);
+      const selection = await vscode.window.showErrorMessage(
+        `Unable to generate a commit message with Simple Amit: ${getErrorMessage(error)}`,
+        "Open Settings"
+      );
+
+      if (selection === "Open Settings") {
+        await vscode.commands.executeCommand("simple-amit.openSettings");
+      }
     }
   };
 }
