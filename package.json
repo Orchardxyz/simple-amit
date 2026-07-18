@@ -114,7 +114,7 @@
     }
   },
   "scripts": {
-    "prepare": "husky",
+    "prepare": "husky && skills-npm",
     "vscode:prepublish": "pnpm run package",
     "compile": "pnpm run format:check && pnpm run check-types && pnpm run lint && pnpm run build:webview && pnpm run build:extension",
     "watch": "npm-run-all -p watch:*",
@@ -138,6 +138,7 @@
   "devDependencies": {
     "@lucide/svelte": "^1.24.0",
     "@oryz/eslint-config": "^2.2.1",
+    "@oryz/prettier-config": "^1.0.0",
     "@sveltejs/vite-plugin-svelte": "^7.2.0",
     "@tailwindcss/vite": "^4.3.2",
     "@types/mocha": "^10.0.10",
@@ -154,6 +155,7 @@
     "npm-run-all": "^4.1.5",
     "prettier": "^3.9.5",
     "prettier-plugin-tailwindcss": "^0.8.0",
+    "skills-npm": "^1.2.0",
     "svelte": "^5.56.4",
     "svelte-check": "^4.7.2",
     "svelte-eslint-parser": "^1.8.0",
