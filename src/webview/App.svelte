@@ -7,10 +7,12 @@
 	import ModelPickerDialog from './components/ModelPickerDialog.svelte';
 	import ProviderSettings from './components/ProviderSettings.svelte';
 	import Button from './components/ui/Button.svelte';
+	import ToastProvider from './components/ui/ToastProvider.svelte';
 	import TooltipProvider from './components/ui/TooltipProvider.svelte';
 	import { getApiKeyDraft, saveApiKeyDraft, type ApiKeyDrafts } from './lib/apiKeyDrafts';
 	import { compatibleProviders, defaultCommitSettings } from './lib/compatibleProviders';
 	import { getStaticModelOptions } from './lib/modelOptions';
+	import { notify } from './lib/toast';
 	import type { WebviewBridge } from './bridge';
 	import type { CommitSettings } from '../shared/commitSettings';
 
@@ -86,8 +88,10 @@
 			resetApiKeyDrafts(resetState.settings, apiKey);
 			apiKeyStatus = { ...resetState.apiKey };
 			saveStatus = 'Defaults restored';
+			notify.success('Defaults restored');
 		} catch {
 			saveStatus = 'Unable to reset settings';
+			notify.error('Unable to reset settings');
 		} finally {
 			requestInFlight = false;
 		}
@@ -112,11 +116,21 @@
 				rememberApiKeyDraft(savedState.settings, apiKey);
 				apiKeyStatus = { ...savedApiKeyState.apiKey };
 				saveStatus = 'Settings and API key saved';
+				notify.success('Settings and API key saved');
+			} else if (savedState.apiKey.hasSavedKey) {
+				const clearedState = await bridge.request(BridgeMethod.ClearApiKey, savedState.settings);
+				apiKey = '';
+				rememberApiKeyDraft(savedState.settings, '');
+				apiKeyStatus = { ...clearedState.apiKey };
+				saveStatus = 'Settings saved and API key cleared';
+				notify.success('Settings saved and API key cleared');
 			} else {
 				saveStatus = 'Settings saved';
+				notify.success('Settings saved');
 			}
 		} catch {
 			saveStatus = 'Unable to save settings';
+			notify.error('Unable to save settings');
 		} finally {
 			requestInFlight = false;
 		}
@@ -134,26 +148,18 @@
 			saveStatus = 'Settings loaded';
 		} catch {
 			saveStatus = 'Unable to load settings';
+			notify.error('Unable to load settings');
 		} finally {
 			requestInFlight = false;
 		}
 	}
 
-	async function clearApiKey() {
-		requestInFlight = true;
-		saveStatus = 'Clearing API key…';
-
-		try {
-			const clearedState = await bridge.request(BridgeMethod.ClearApiKey, getSettingsSnapshot());
-			apiKey = '';
-			rememberApiKeyDraft(getSettingsSnapshot(), '');
-			apiKeyStatus = { ...clearedState.apiKey };
-			saveStatus = 'API key cleared';
-		} catch {
-			saveStatus = 'Unable to clear API key';
-		} finally {
-			requestInFlight = false;
-		}
+	function clearApiKey() {
+		apiKeyRequestNumber += 1;
+		apiKey = '';
+		rememberApiKeyDraft(getSettingsSnapshot(), '');
+		markUnsaved();
+		notify.info('API key cleared from draft');
 	}
 
 	async function refreshApiKeyStatus(providerSettings = getSettingsSnapshot()) {
@@ -210,6 +216,7 @@
 				modelPickerError = apiKeyStatus.hasSavedKey || apiKey.trim().length > 0
 					? 'Unable to fetch provider models. Showing the static fallback list.'
 					: 'Save or enter an API key to fetch provider models. Showing the static fallback list.';
+				notify.warning(modelPickerError);
 			}
 		} finally {
 			if (requestNumber === modelListRequestNumber) {
@@ -235,11 +242,17 @@
 			if (requestNumber === connectionTestRequestNumber) {
 				connectionTestMessage = result.message;
 				connectionTestOk = result.ok;
+				if (result.ok) {
+					notify.success(result.message);
+				} else {
+					notify.error(result.message);
+				}
 			}
 		} catch {
 			if (requestNumber === connectionTestRequestNumber) {
 				connectionTestMessage = 'Unable to test provider connection.';
 				connectionTestOk = false;
+				notify.error('Unable to test provider connection.');
 			}
 		} finally {
 			if (requestNumber === connectionTestRequestNumber) {
@@ -276,7 +289,7 @@
 			connectionTestMessage={connectionTestMessage}
 			connectionTestOk={connectionTestOk}
 			onApiKeyChange={handleApiKeyChange}
-			onClearApiKey={() => void clearApiKey()}
+			onClearApiKey={clearApiKey}
 			onProviderSecretChange={handleProviderSecretChange}
 			onChange={markUnsaved}
 			onOpenModelPicker={() => void openModelPicker()}
@@ -303,6 +316,7 @@
 	</form>
 </main>
 </TooltipProvider>
+<ToastProvider />
 
 <ModelPickerDialog
 	bind:open={modelPickerOpen}
