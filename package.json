@@ -16,10 +16,12 @@
     "commands": [
       {
         "command": "simple-amit.openSettings",
+        "category": "Simple Amit",
         "title": "Open Settings"
       },
       {
         "command": "simple-amit.generateCommitMessage",
+        "category": "Simple Amit",
         "title": "Generate Commit Message",
         "icon": {
           "light": "resources/icons/simple-amit-light.svg",
@@ -35,6 +37,11 @@
     ],
     "menus": {
       "scm/title": [
+        {
+          "command": "simple-amit.generateCommitMessage",
+          "when": "scmProvider == git",
+          "group": "navigation@1"
+        },
         {
           "submenu": "simple-amit.scmMenu",
           "when": "scmProvider == git",
