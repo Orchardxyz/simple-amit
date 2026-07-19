@@ -10,7 +10,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ### Fixed
 
 * **webview:** prevent dismissed toasts blocking clicks ([025a753](https://github.com/Orchardxyz/simple-amit/commit/025a753663ae78bc7d92272055bcee7a049cb875))
-* **webview:** resolve settings RPC and toast click issues ([6f407a7](https://github.com/Orchardxyz/simple-amit/commit/6f407a72e9e6efc6e3b88f1df13a33826dc14b7a))
 * **webview:** snapshot settings before RPC ([95e6827](https://github.com/Orchardxyz/simple-amit/commit/95e6827bdaceb4bb7c591d28c7254f33025477e6))
 
 ## [0.1.1](https://github.com/Orchardxyz/simple-amit/compare/v0.1.0...v0.1.1) (2026-07-19)
