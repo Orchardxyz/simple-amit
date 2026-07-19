@@ -36,4 +36,17 @@
   .input-control {
     @apply w-full rounded border border-[var(--vscode-input-border)] bg-[var(--vscode-input-background)] px-2.5 py-2 font-mono text-xs text-[var(--vscode-input-foreground)] outline-none placeholder:text-[var(--vscode-input-placeholderForeground)] focus:border-[var(--vscode-focusBorder)] focus:ring-1 focus:ring-[var(--vscode-focusBorder)];
   }
+
+  [data-sonner-toaster] {
+    pointer-events: none;
+  }
+
+  [data-sonner-toast] {
+    pointer-events: auto;
+  }
+
+  [data-sonner-toast][data-removed="true"],
+  [data-sonner-toast][data-visible="false"] {
+    pointer-events: none;
+  }
 }
