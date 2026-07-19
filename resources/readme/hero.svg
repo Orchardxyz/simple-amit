@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+  <title id="title">simple-amit</title>
+  <desc id="desc">simple-amit is a simple VS Code extension for generating commit messages with AI.</desc>
+  <defs>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#252734"/>
+      <stop offset="1" stop-color="#191A22"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="360" rx="28" fill="#101010"/>
+  <rect x="1" y="1" width="1198" height="358" rx="27" fill="none" stroke="#2A2A2A" stroke-width="2"/>
+
+  <g id="brand" transform="translate(64 56)">
+    <rect width="72" height="72" rx="18" fill="#151515" stroke="#2A2A2A" stroke-width="1.5"/>
+    <g fill="#FFFFFF" opacity=".95">
+      <circle cx="55" cy="19" r="3.1"/>
+      <circle cx="18" cy="55" r="3.1"/>
+      <path d="M36 19.4c3 11.8 7.8 16.6 19.6 19.6C43.8 42 39 46.8 36 58.6 33 46.8 28.2 42 16.4 39 28.2 36 33 31.2 36 19.4Z"/>
+    </g>
+    <text x="96" y="30" fill="#F8F8F8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20" font-weight="650">VS Code extension</text>
+    <text x="96" y="94" fill="#F8F8F8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="64" font-weight="760">simple-amit</text>
+    <text x="100" y="138" fill="#B9BBC8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="24">A simple extension for generating</text>
+    <text x="100" y="174" fill="#B9BBC8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="24">commit messages with AI.</text>
+  </g>
+
+  <g id="flow" transform="translate(72 274)">
+    <rect width="222" height="42" rx="10" fill="#1E1F29" stroke="#5F6475"/>
+    <text x="22" y="27" fill="#EDEEF6" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16">provider + model</text>
+    <path d="M244 21h62" stroke="#5F6475" stroke-width="2"/>
+    <path d="m296 13 10 8-10 8" fill="none" stroke="#5F6475" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="326" width="156" height="42" rx="10" fill="#222433" stroke="#C084FC"/>
+    <text x="349" y="27" fill="#FFFFFF" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16">prompt</text>
+    <path d="M504 21h62" stroke="#5F6475" stroke-width="2"/>
+    <path d="m556 13 10 8-10 8" fill="none" stroke="#5F6475" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="586" width="150" height="42" rx="10" fill="#192336" stroke="#2F81F7"/>
+    <text x="628" y="27" fill="#FFFFFF" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16">message</text>
+  </g>
+
+  <g id="proof" transform="translate(800 54)">
+    <rect width="360" height="252" rx="18" fill="url(#panel)" stroke="#3A3C4C" stroke-width="1.5"/>
+    <rect x="18" y="18" width="324" height="40" rx="9" fill="#2A2C38"/>
+    <circle cx="38" cy="38" r="5" fill="#6B7280"/>
+    <circle cx="58" cy="38" r="5" fill="#6B7280"/>
+    <circle cx="78" cy="38" r="5" fill="#6B7280"/>
+    <text x="108" y="43" fill="#D7D9E3" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15">Source Control</text>
+
+    <g transform="translate(26 84)">
+      <rect width="144" height="44" rx="10" fill="#2F81F7"/>
+      <path d="M28 18c1.8 7 4.6 9.8 11.6 11.6C32.6 31.4 29.8 34.2 28 41.2 26.2 34.2 23.4 31.4 16.4 29.6 23.4 27.8 26.2 25 28 18Z" fill="#FFFFFF"/>
+      <text x="54" y="28" fill="#FFFFFF" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="16" font-weight="700">Generate</text>
+    </g>
+
+    <g transform="translate(196 84)">
+      <rect width="128" height="44" rx="10" fill="#20222D" stroke="#C084FC" stroke-width="2"/>
+      <text x="22" y="28" fill="#F8F8F8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="16" font-weight="650">Settings</text>
+    </g>
+
+    <g transform="translate(26 154)">
+      <rect width="298" height="58" rx="10" fill="#11131A" stroke="#4B5063"/>
+      <text x="20" y="35" fill="#C9CBD6" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="17">feat: add settings UI</text>
+    </g>
+  </g>
+</svg>
