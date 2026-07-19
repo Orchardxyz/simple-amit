@@ -55,7 +55,7 @@
 	}
 
 	function getSettingsSnapshot() {
-		return { ...settings };
+		return $state.snapshot(settings);
 	}
 
 	function rememberApiKeyDraft(providerSettings = getSettingsSnapshot(), draftApiKey = apiKey) {
