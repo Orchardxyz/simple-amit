@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project uses Semantic Versioning with odd minor versions for VS Code Marketplace prereleases.
 
+## [0.1.1](https://github.com/Orchardxyz/simple-amit/compare/v0.1.0...v0.1.1) (2026-07-19)
+
+
+### Fixed
+
+* **manifest:** update marketplace categories ([#2](https://github.com/Orchardxyz/simple-amit/issues/2)) ([513367c](https://github.com/Orchardxyz/simple-amit/commit/513367c569894337f8d4cb4d6134621fb806de7a))
+
 ## [Unreleased]
 
 ## [0.1.0] - 2026-07-19
