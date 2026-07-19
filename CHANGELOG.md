@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project uses Semantic Versioning with odd minor versions for VS Code Marketplace prereleases.
 
+## [0.1.2](https://github.com/Orchardxyz/simple-amit/compare/v0.1.1...v0.1.2) (2026-07-19)
+
+
+### Fixed
+
+* **webview:** prevent dismissed toasts blocking clicks ([025a753](https://github.com/Orchardxyz/simple-amit/commit/025a753663ae78bc7d92272055bcee7a049cb875))
+* **webview:** snapshot settings before RPC ([95e6827](https://github.com/Orchardxyz/simple-amit/commit/95e6827bdaceb4bb7c591d28c7254f33025477e6))
+
 ## [0.1.1](https://github.com/Orchardxyz/simple-amit/compare/v0.1.0...v0.1.1) (2026-07-19)
 
 ### Fixed
