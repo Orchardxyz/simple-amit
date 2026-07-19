@@ -1,0 +1,28 @@
+{
+  "bootstrap-sha": "db24a50",
+  "bump-patch-for-minor-pre-major": true,
+  "draft": true,
+  "force-tag-creation": true,
+  "include-component-in-tag": false,
+  "pull-request-title-pattern": "chore: release ${version}",
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "package-name": "simple-amit",
+      "changelog-path": "CHANGELOG.md",
+      "changelog-sections": [
+        { "type": "feat", "section": "Added" },
+        { "type": "fix", "section": "Fixed" },
+        { "type": "perf", "section": "Changed" },
+        { "type": "refactor", "section": "Changed" },
+        { "type": "style", "section": "Changed" },
+        { "type": "docs", "section": "Changed" },
+        { "type": "build", "section": "Changed" },
+        { "type": "deps", "section": "Changed" },
+        { "type": "security", "section": "Security" },
+        { "type": "deprecate", "section": "Deprecated" },
+        { "type": "remove", "section": "Removed" }
+      ]
+    }
+  }
+}

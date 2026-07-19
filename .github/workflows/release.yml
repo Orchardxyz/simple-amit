@@ -1,0 +1,157 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Release channel for the current package.json version.
+        required: true
+        default: pre
+        type: choice
+        options:
+          - pre
+          - stable
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Run Release Please
+        id: release
+        if: github.event_name == 'push'
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+
+      - name: Install dependencies
+        if: github.event_name == 'workflow_dispatch' || steps.release.outputs.release_created == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Prepare release metadata
+        id: metadata
+        if: github.event_name == 'workflow_dispatch' || steps.release.outputs.release_created == 'true'
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          minor="$(node -p "require('./package.json').version.split('.')[1]")"
+          channel="${{ github.event.inputs.channel }}"
+
+          if [ -z "$channel" ]; then
+            if [ $((minor % 2)) -eq 1 ]; then
+              channel="pre"
+            else
+              channel="stable"
+            fi
+          fi
+
+          if [ "$channel" = "stable" ] && [ $((minor % 2)) -eq 1 ]; then
+            echo "Odd minor version ${version} cannot be published as stable." >&2
+            exit 1
+          fi
+
+          if [ "$channel" = "pre" ] && [ $((minor % 2)) -eq 0 ]; then
+            echo "Even minor version ${version} cannot be published as prerelease." >&2
+            exit 1
+          fi
+
+          if [ "$channel" = "pre" ]; then
+            vsix="dist-vsix/simple-amit-${version}-pre.vsix"
+          else
+            vsix="dist-vsix/simple-amit-${version}.vsix"
+          fi
+
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "channel=${channel}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${version}" >> "$GITHUB_OUTPUT"
+          echo "vsix=${vsix}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate source
+        if: github.event_name == 'workflow_dispatch' || steps.release.outputs.release_created == 'true'
+        run: pnpm run ci
+
+      - name: Run extension tests
+        if: github.event_name == 'workflow_dispatch' || steps.release.outputs.release_created == 'true'
+        run: pnpm run test:ci
+
+      - name: Package prerelease VSIX
+        if: steps.metadata.outputs.channel == 'pre'
+        run: pnpm run vsix:pre
+
+      - name: Package stable VSIX
+        if: steps.metadata.outputs.channel == 'stable'
+        run: pnpm run vsix:stable
+
+      - name: Publish VS Code Marketplace prerelease
+        if: steps.metadata.outputs.channel == 'pre'
+        run: pnpm run publish:vscode:pre
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+      - name: Publish VS Code Marketplace stable
+        if: steps.metadata.outputs.channel == 'stable'
+        run: pnpm run publish:vscode
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+      - name: Publish Open VSX stable
+        if: steps.metadata.outputs.channel == 'stable'
+        run: pnpm run publish:openvsx
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+
+      - name: Publish GitHub prerelease
+        if: steps.metadata.outputs.channel == 'pre'
+        run: |
+          tag="${{ steps.metadata.outputs.tag }}"
+          vsix="${{ steps.metadata.outputs.vsix }}"
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "$vsix" --clobber
+            gh release edit "$tag" --prerelease --draft=false
+          else
+            gh release create "$tag" "$vsix" --target "$GITHUB_SHA" --title "$tag" --notes "See CHANGELOG.md for release notes." --prerelease
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Publish GitHub stable release
+        if: steps.metadata.outputs.channel == 'stable'
+        run: |
+          tag="${{ steps.metadata.outputs.tag }}"
+          vsix="${{ steps.metadata.outputs.vsix }}"
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "$vsix" --clobber
+            gh release edit "$tag" --prerelease=false --draft=false --latest
+          else
+            gh release create "$tag" "$vsix" --target "$GITHUB_SHA" --title "$tag" --notes "See CHANGELOG.md for release notes." --latest
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}

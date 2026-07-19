@@ -1,7 +1,7 @@
 # simple-amit
 
 <p align="center">
-  <img src="./resources/readme/hero.svg" width="100%" alt="simple-amit: a simple extension for generating commit messages with AI">
+  <img src="./resources/readme/hero.png" width="100%" alt="simple-amit: a simple extension for generating commit messages with AI">
 </p>
 
 A **simple** extension for generating **commit** message with **AI**.
