@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { getUiLanguage, saveUiLanguage } from "./globalState/uiLanguageState";
 import { testProviderConnection } from "./providers/connectionTest";
 import { fetchModelList } from "./providers/modelList";
 import { getCommitSettings, resetCommitSettings, saveCommitSettings } from "./settings/commitSettingsRepository";
@@ -66,6 +67,10 @@ export class SimpleAmitWebviewPanel {
       [BridgeMethod.ResetSettings]: async () => {
         const resetSettings = await resetCommitSettings();
         return this.createInitialState(resetSettings);
+      },
+      [BridgeMethod.SaveUiLanguage]: async (uiLanguage) => {
+        const savedUiLanguage = await saveUiLanguage(this.context.globalState, uiLanguage);
+        return { uiLanguage: savedUiLanguage };
       }
     };
   }
@@ -73,7 +78,8 @@ export class SimpleAmitWebviewPanel {
   private async createInitialState(settings: CommitSettings): Promise<InitialState> {
     return {
       apiKey: await this.getApiKeyState(settings),
-      settings
+      settings,
+      uiLanguage: getUiLanguage(this.context.globalState)
     };
   }
 

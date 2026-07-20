@@ -13,6 +13,7 @@
 	import SegmentedControl from './ui/SegmentedControl.svelte';
 	import SettingsSection from './ui/SettingsSection.svelte';
 	import Tooltip from './ui/Tooltip.svelte';
+	import type { Translator } from '../lib/i18n';
 
 	type Props = {
 		apiKey?: string;
@@ -30,6 +31,7 @@
 		onProviderSecretChange: (settings: CommitSettings, previousSettings: CommitSettings) => void;
 		onTestConnection: () => void;
 		settings: CommitSettings;
+		t: Translator;
 	};
 
 	let {
@@ -46,6 +48,7 @@
 		onProviderSecretChange,
 		onTestConnection,
 		settings = $bindable(),
+		t,
 	}: Props = $props();
 
 	let showApiKey = $state(false);
@@ -96,8 +99,8 @@
 		connectionTestMessage.length > 0
 			? connectionTestMessage
 			: settings.providerType === 'compatible'
-				? `Ready to fetch from ${currentCompatibleProvider.displayName}.`
-				: 'Ready to test provider connection.',
+				? t('provider.status.readyToFetch', { provider: currentCompatibleProvider.displayName })
+				: t('provider.status.readyToTest'),
 	);
 
 	let connectionStatusColor = $derived(
@@ -109,11 +112,11 @@
 	);
 </script>
 
-<SettingsSection bind:open={sectionOpen} icon={Bot} title="AI provider">
+<SettingsSection bind:open={sectionOpen} icon={Bot} title={t('provider.section.title')}>
 	<div class="px-5 pb-6 sm:px-7">
 
 	<SegmentedControl
-		label="AI provider type"
+		label={t('provider.type.label')}
 		value={settings.providerType}
 		options={[
 			{ value: 'anthropic', label: 'Anthropic' },
@@ -127,7 +130,7 @@
 		{#if settings.providerType === 'compatible'}
 			<FormField
 				id="compatible-provider"
-				label="Compatible provider"
+				label={t('provider.compatibleProvider.label')}
 			>
 				<select
 					id="compatible-provider"
@@ -143,7 +146,7 @@
 
 			<FormField
 				id="base-url"
-				label="Base URL"
+				label={t('provider.baseUrl.label')}
 			>
 				<input
 					id="base-url"
@@ -157,11 +160,11 @@
 
 		<FormField
 			id="api-key"
-			label="API key"
+			label={t('provider.apiKey.label')}
 		>
 			{#snippet action()}
 				{#if apiKeyHasSavedKey}
-					<Tooltip text="Clear API key">
+					<Tooltip text={t('provider.apiKey.clear')}>
 						{#snippet children(tooltipProps)}
 							<Button
 								{...tooltipProps}
@@ -170,7 +173,7 @@
 								size="icon"
 								disabled={disabled}
 								onClick={onClearApiKey}
-								aria-label="Clear API key"
+								aria-label={t('provider.apiKey.clear')}
 							>
 								<Trash2 size={14} strokeWidth={1.8} aria-hidden="true" />
 							</Button>
@@ -189,9 +192,9 @@
 						onApiKeyChange(apiKey);
 					}}
 					autocomplete="off"
-					placeholder={apiKeyHasSavedKey ? 'API key saved' : 'Enter API key'}
+					placeholder={apiKeyHasSavedKey ? t('provider.apiKey.saved') : t('provider.apiKey.enter')}
 				/>
-				<Tooltip text={showApiKey ? 'Hide API key' : 'Show API key'}>
+				<Tooltip text={showApiKey ? t('provider.apiKey.hide') : t('provider.apiKey.show')}>
 					{#snippet children(tooltipProps)}
 						<Button
 							{...tooltipProps}
@@ -200,7 +203,7 @@
 							size="icon"
 							type="button"
 							onClick={() => (showApiKey = !showApiKey)}
-							aria-label={showApiKey ? 'Hide API key' : 'Show API key'}
+							aria-label={showApiKey ? t('provider.apiKey.hide') : t('provider.apiKey.show')}
 						>
 							{#if showApiKey}
 								<EyeOff size={14} strokeWidth={1.8} aria-hidden="true" />
@@ -212,21 +215,21 @@
 				</Tooltip>
 			</div>
 			<span class="mt-2 text-[11px] text-[var(--vscode-descriptionForeground)]">
-				{apiKeyHasSavedKey ? 'Saved for current provider' : 'No key saved for current provider'}
+				{apiKeyHasSavedKey ? t('provider.apiKey.savedForProvider') : t('provider.apiKey.noSavedKey')}
 			</span>
 		</FormField>
 
-		<FormField id="model" label="Model">
+		<FormField id="model" label={t('provider.model.label')}>
 			<div class="flex gap-2">
 				<input
 					id="model"
 					class="input-control min-w-0 flex-1"
 					value={settings.model}
 					oninput={event => updateSettings({ model: event.currentTarget.value })}
-					placeholder={settings.providerType === 'compatible' ? 'Select a model' : 'Enter a model ID'}
+					placeholder={settings.providerType === 'compatible' ? t('provider.model.select') : t('provider.model.enter')}
 					spellcheck="false"
 				/>
-				<Tooltip text="Test connection">
+				<Tooltip text={t('provider.testConnection')}>
 					{#snippet children(tooltipProps)}
 						<Button
 							{...tooltipProps}
@@ -235,14 +238,14 @@
 							size="icon"
 							disabled={disabled || connectionTestLoading}
 							onClick={onTestConnection}
-							aria-label="Test connection"
+							aria-label={t('provider.testConnection')}
 						>
 							<PlugZap size={14} strokeWidth={1.8} aria-hidden="true" />
 						</Button>
 					{/snippet}
 				</Tooltip>
 				{#if settings.providerType === 'compatible'}
-					<Tooltip text="Fetch models">
+					<Tooltip text={t('provider.model.fetch')}>
 						{#snippet children(tooltipProps)}
 							<Button
 								{...tooltipProps}
@@ -251,7 +254,7 @@
 								size="icon"
 								disabled={disabled}
 								onClick={onOpenModelPicker}
-								aria-label="Fetch models"
+								aria-label={t('provider.model.fetch')}
 							>
 								<RefreshCw size={14} strokeWidth={1.8} aria-hidden="true" />
 							</Button>

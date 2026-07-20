@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Dialog as DialogPrimitive } from 'bits-ui';
+	import type { Translator } from '../../lib/i18n';
 	import type { Snippet } from 'svelte';
 
 	type Props = {
@@ -7,6 +8,7 @@
 		description?: string;
 		footer?: Snippet;
 		open?: boolean;
+		t: Translator;
 		title: string;
 	};
 
@@ -15,6 +17,7 @@
 		description,
 		footer,
 		open = $bindable(false),
+		t,
 		title,
 	}: Props = $props();
 </script>
@@ -39,7 +42,7 @@
 					</div>
 					<DialogPrimitive.Close
 						class="grid size-7 place-items-center rounded text-lg leading-none text-[var(--vscode-descriptionForeground)] outline-none hover:bg-[var(--vscode-toolbar-hoverBackground)] hover:text-[var(--vscode-editor-foreground)] focus-visible:ring-1 focus-visible:ring-[var(--vscode-focusBorder)]"
-						aria-label="Close dialog"
+						aria-label={t('dialog.close')}
 						type="button"
 					>
 						×

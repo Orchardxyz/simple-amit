@@ -1,5 +1,6 @@
 /* eslint-disable import/newline-after-import */
 import { isCommitSettings, type CommitSettings } from "./commitSettings";
+import { isUiLanguage, type UiLanguage } from "./uiLanguage";
 /* eslint-enable import/newline-after-import */
 
 /**
@@ -15,7 +16,8 @@ export const BridgeMethod = {
   SaveApiKey: "settings.saveApiKey",
   ClearApiKey: "settings.clearApiKey",
   SaveSettings: "settings.save",
-  ResetSettings: "settings.reset"
+  ResetSettings: "settings.reset",
+  SaveUiLanguage: "uiLanguage.save"
 } as const;
 
 export type BridgeMethod = (typeof BridgeMethod)[keyof typeof BridgeMethod];
@@ -30,6 +32,7 @@ export type BridgeErrorCode = (typeof BridgeErrorCode)[keyof typeof BridgeErrorC
 export type InitialState = {
   apiKey: ApiKeyState;
   settings: CommitSettings;
+  uiLanguage: UiLanguage;
 };
 
 export type ApiKeyState = {
@@ -60,6 +63,10 @@ export type TestProviderConnectionParams = FetchModelListParams;
 export type TestProviderConnectionResult = {
   message: string;
   ok: boolean;
+};
+
+export type UiLanguageResult = {
+  uiLanguage: UiLanguage;
 };
 
 /**
@@ -97,6 +104,10 @@ export type BridgeContract = {
   [BridgeMethod.ResetSettings]: {
     params: undefined;
     result: InitialState;
+  };
+  [BridgeMethod.SaveUiLanguage]: {
+    params: UiLanguage;
+    result: UiLanguageResult;
   };
 };
 
@@ -150,6 +161,8 @@ export function isBridgeRequest(message: unknown): message is BridgeRequest {
     case BridgeMethod.GetInitialState:
     case BridgeMethod.ResetSettings:
       return message.params === undefined;
+    case BridgeMethod.SaveUiLanguage:
+      return isUiLanguage(message.params);
     case BridgeMethod.GetApiKeyStatus:
     case BridgeMethod.ClearApiKey:
       return isCommitSettings(message.params);
