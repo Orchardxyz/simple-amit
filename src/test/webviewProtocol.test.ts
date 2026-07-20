@@ -15,6 +15,28 @@ suite("Webview bridge protocol", () => {
     );
   });
 
+  test("accepts UI-language save request shapes", () => {
+    assert.strictEqual(
+      isBridgeRequest({
+        type: "request",
+        id: "request-1",
+        method: BridgeMethod.SaveUiLanguage,
+        params: "en"
+      }),
+      true
+    );
+
+    assert.strictEqual(
+      isBridgeRequest({
+        type: "request",
+        id: "request-2",
+        method: BridgeMethod.SaveUiLanguage,
+        params: "zh-CN"
+      }),
+      true
+    );
+  });
+
   test("rejects invalid request parameters", () => {
     assert.strictEqual(
       isBridgeRequest({
@@ -22,6 +44,36 @@ suite("Webview bridge protocol", () => {
         id: "request-1",
         method: BridgeMethod.GetInitialState,
         params: {}
+      }),
+      false
+    );
+
+    assert.strictEqual(
+      isBridgeRequest({
+        type: "request",
+        id: "request-2",
+        method: BridgeMethod.SaveUiLanguage,
+        params: "fr"
+      }),
+      false
+    );
+
+    assert.strictEqual(
+      isBridgeRequest({
+        type: "request",
+        id: "request-3",
+        method: BridgeMethod.SaveUiLanguage,
+        params: ""
+      }),
+      false
+    );
+
+    assert.strictEqual(
+      isBridgeRequest({
+        type: "request",
+        id: "request-4",
+        method: BridgeMethod.SaveUiLanguage,
+        params: 123
       }),
       false
     );
@@ -217,6 +269,24 @@ suite("Webview bridge protocol", () => {
       apiKey: "secret-key",
       hasSavedKey: true
     });
+  });
+
+  test("accepts initial-state responses with UI language", () => {
+    const response = {
+      type: "response",
+      id: "request-1",
+      ok: true,
+      result: {
+        apiKey: {
+          hasSavedKey: false
+        },
+        settings: validSettings,
+        uiLanguage: "zh-CN"
+      }
+    } as const;
+
+    assert.strictEqual(isBridgeResponse(response), true);
+    assert.strictEqual(response.result.uiLanguage, "zh-CN");
   });
 
   test("accepts numeric error codes in failure responses", () => {

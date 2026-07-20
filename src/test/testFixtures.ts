@@ -41,6 +41,31 @@ export class FakeSecretStorage implements vscode.SecretStorage {
   }
 }
 
+export class FakeMemento implements vscode.Memento {
+  private readonly values = new Map<string, unknown>();
+
+  get<T>(key: string): T | undefined;
+  get<T>(key: string, defaultValue: T): T;
+  get<T>(key: string, defaultValue?: T): T | undefined {
+    return this.values.has(key) ? (this.values.get(key) as T) : defaultValue;
+  }
+
+  keys(): readonly string[] {
+    return [...this.values.keys()];
+  }
+
+  setKeysForSync(_keys: readonly string[]): void {}
+
+  async update(key: string, value: unknown): Promise<void> {
+    if (value === undefined) {
+      this.values.delete(key);
+      return;
+    }
+
+    this.values.set(key, value);
+  }
+}
+
 type FakeSimpleGitOptions = {
   stagedDiff?: string;
   stagedNumstat?: string;

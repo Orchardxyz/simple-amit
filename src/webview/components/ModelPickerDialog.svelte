@@ -2,6 +2,7 @@
 	import { tick } from 'svelte';
 	import Button from './ui/Button.svelte';
 	import Dialog from './ui/Dialog.svelte';
+	import type { Translator } from '../lib/i18n';
 
 	type Props = {
 		description: string;
@@ -12,6 +13,7 @@
 		open?: boolean;
 		selectedModel?: string;
 		sourceLabel: string;
+		t: Translator;
 	};
 
 	let {
@@ -23,6 +25,7 @@
 		open = $bindable(false),
 		selectedModel = $bindable(''),
 		sourceLabel,
+		t,
 	}: Props = $props();
 
 	let modelSearch = $state('');
@@ -49,24 +52,24 @@
 	<div class="flex items-center justify-between gap-4">
 		<span class="text-[11px] text-[var(--vscode-descriptionForeground)]">
 			{#if loading}
-				Fetching models…
+				{t('modelDialog.fetchingModels')}
 			{:else}
-				{models.length} models in the {sourceLabel}
+				{t('modelDialog.footer.count', { count: models.length, source: sourceLabel })}
 			{/if}
 		</span>
 		<div class="flex gap-2">
-			<Button type="button" onClick={() => (open = false)}>Cancel</Button>
-			<Button variant="primary" type="button" disabled={pendingModel.length === 0} onClick={chooseModel}>Use model</Button>
+			<Button type="button" onClick={() => (open = false)}>{t('modelDialog.action.cancel')}</Button>
+			<Button variant="primary" type="button" disabled={pendingModel.length === 0} onClick={chooseModel}>{t('modelDialog.action.useModel')}</Button>
 		</div>
 	</div>
 {/snippet}
 
-<Dialog bind:open title="Select a model" {description} {footer}>
+<Dialog bind:open title={t('modelDialog.title')} {description} {footer} {t}>
 	<input
 		id="model-search"
 		class="input-control"
 		bind:value={modelSearch}
-		placeholder={loading ? 'Fetching models…' : 'Search models…'}
+		placeholder={loading ? t('modelDialog.fetchingModels') : t('modelDialog.searchPlaceholder')}
 		autocomplete="off"
 		disabled={loading}
 	/>
@@ -75,7 +78,7 @@
 	{/if}
 	<div class="mt-3 max-h-60 overflow-auto rounded border border-[var(--vscode-panel-border)]">
 		{#if loading}
-			<p class="m-0 px-3 py-4 text-xs text-[var(--vscode-descriptionForeground)]">Fetching provider models…</p>
+			<p class="m-0 px-3 py-4 text-xs text-[var(--vscode-descriptionForeground)]">{t('modelDialog.loadingList')}</p>
 		{:else if filteredModels.length > 0}
 			{#each filteredModels as modelName (modelName)}
 				<button
@@ -93,7 +96,7 @@
 				</button>
 			{/each}
 		{:else}
-			<p class="m-0 px-3 py-4 text-xs text-[var(--vscode-descriptionForeground)]">No matching models.</p>
+			<p class="m-0 px-3 py-4 text-xs text-[var(--vscode-descriptionForeground)]">{t('modelDialog.noMatchingModels')}</p>
 		{/if}
 	</div>
 </Dialog>
