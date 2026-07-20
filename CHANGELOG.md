@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project uses Semantic Versioning with odd minor versions for VS Code Marketplace prereleases.
 
+## [0.2.0](https://github.com/Orchardxyz/simple-amit/compare/v0.1.2...v0.2.0) (2026-07-20)
+
+
+### Added
+
+* **webview:** add UI language switcher and feedback link ([#10](https://github.com/Orchardxyz/simple-amit/issues/10)) ([39e789c](https://github.com/Orchardxyz/simple-amit/commit/39e789c5fef6a4bbf65c06ad25960c55e5b3b7e2))
+
 ## [0.1.2](https://github.com/Orchardxyz/simple-amit/compare/v0.1.1...v0.1.2) (2026-07-19)
 
 
