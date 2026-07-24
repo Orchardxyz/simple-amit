@@ -1,7 +1,7 @@
+import { Output, generateText, stepCountIs, type LanguageModel } from "ai";
 import { z } from "zod";
 import { type CommitMessageLanguage, type CommitSettings } from "../shared/commitSettings";
 import { createGitTools, type DiffScope } from "./gitTools";
-import type { LanguageModel } from "ai" with { "resolution-mode": "import" };
 import type { SimpleGit } from "simple-git";
 
 const languageVerdictSchema = z.object({
@@ -41,14 +41,26 @@ export type GenerateCommitMessageAgentOptions = {
 };
 
 export async function generateCommitMessageWithAgent(options: GenerateCommitMessageAgentOptions): Promise<CommitMessageResult> {
-  const agent = await createCommitMessageAgent(options);
-  const firstResult = await runAgent(agent, createGenerationPrompt(options.settings.language), options.settings.language);
+  const tools = createGitTools(options.git, options.repositoryRoot);
+  const firstResult = await runAgent(
+    options.model,
+    tools,
+    createAgentInstructions(options.settings),
+    createGenerationPrompt(options.settings.language),
+    options.settings.language
+  );
 
   if (firstResult.languageVerdict.matches) {
     return firstResult;
   }
 
-  const repairedResult = await runAgent(agent, createRepairPrompt(options.settings.language, firstResult.message), options.settings.language);
+  const repairedResult = await runAgent(
+    options.model,
+    tools,
+    createAgentInstructions(options.settings),
+    createRepairPrompt(options.settings.language, firstResult.message),
+    options.settings.language
+  );
 
   if (!repairedResult.languageVerdict.matches) {
     throw new Error("Generated commit message did not match the configured language.");
@@ -57,27 +69,20 @@ export async function generateCommitMessageWithAgent(options: GenerateCommitMess
   return repairedResult;
 }
 
-async function createCommitMessageAgent({ git, model, repositoryRoot, settings }: GenerateCommitMessageAgentOptions): Promise<AgentLike> {
-  setVoltAgentProductionDefault();
-  const { Agent } = await import("@voltagent/core");
-
-  return new Agent({
-    instructions: createAgentInstructions(settings),
-    maxSteps: 6,
+async function runAgent(
+  model: LanguageModel,
+  tools: ReturnType<typeof createGitTools>,
+  system: string,
+  prompt: string,
+  language: CommitMessageLanguage
+) {
+  const result = await generateText({
     model,
-    name: "Simple Amit Commit Message Agent",
-    tools: await createGitTools(git, repositoryRoot)
-  }) as unknown as AgentLike;
-}
-
-type AgentLike = {
-  generateText(prompt: string, options: { output: unknown }): Promise<{ output: unknown }>;
-};
-
-async function runAgent(agent: AgentLike, prompt: string, language: CommitMessageLanguage) {
-  const { Output } = await import("ai");
-  const result = await agent.generateText(prompt, {
-    output: Output.object({ schema: agentCommitMessageOutputSchema })
+    output: Output.object({ schema: agentCommitMessageOutputSchema }),
+    prompt,
+    stopWhen: stepCountIs(6),
+    system,
+    tools
   });
 
   return normalizeAgentOutput(agentCommitMessageOutputSchema.parse(result.output), language);
@@ -142,10 +147,6 @@ Set diffScopeUsed to the same scope used for the original generation if known; o
 
 export function isDiffScope(value: string): value is DiffScope {
   return value === "staged" || value === "unstaged" || value === "all";
-}
-
-function setVoltAgentProductionDefault() {
-  process.env.NODE_ENV ??= "production";
 }
 
 export function normalizeAgentOutput(output: z.infer<typeof agentCommitMessageOutputSchema>, language: CommitMessageLanguage): CommitMessageResult {

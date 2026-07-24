@@ -1,3 +1,4 @@
+import { tool } from "ai";
 import simpleGit, { type SimpleGit, type StatusResult } from "simple-git";
 import { z } from "zod";
 
@@ -29,16 +30,12 @@ export function createGitClient(baseDir: string) {
   return simpleGit({ baseDir });
 }
 
-export async function createGitTools(git: SimpleGit, repositoryRoot: string) {
-  setVoltAgentProductionDefault();
-  const { createTool } = await import("@voltagent/core");
-
-  return [
-    createTool({
-      name: "get_repository_status",
+export function createGitTools(git: SimpleGit, repositoryRoot: string) {
+  return {
+    get_repository_status: tool({
       description:
         "Read the repository status before choosing which diff scope to inspect. This is read-only and returns staged, unstaged, and untracked summaries.",
-      parameters: z.object({}),
+      inputSchema: z.object({}),
       execute: async () => {
         const [status, branchSummary] = await Promise.all([git.status(), git.branch().catch(() => undefined)]);
 
@@ -52,19 +49,17 @@ export async function createGitTools(git: SimpleGit, repositoryRoot: string) {
         };
       }
     }),
-    createTool({
-      name: "get_workspace_diff",
+    get_workspace_diff: tool({
       description:
         "Read a bounded structured git diff for the requested scope. The scope must be chosen from the commit instructions, not from this tool.",
-      parameters: z.object({
+      inputSchema: z.object({
         scope: z.enum(diffScopes).describe("Which workspace changes to inspect: staged, unstaged, or all.")
       }),
       execute: async ({ scope }) => createWorkspaceDiffPayload(git, scope)
     }),
-    createTool({
-      name: "get_recent_commit_messages",
+    get_recent_commit_messages: tool({
       description: "Read recent commit subject lines only, for learning format, language, type, scope, and tone. Do not copy unrelated content.",
-      parameters: z.object({
+      inputSchema: z.object({
         limit: z.number().int().min(1).max(recentCommitLimit).default(recentCommitLimit)
       }),
       execute: async ({ limit }) => {
@@ -74,11 +69,7 @@ export async function createGitTools(git: SimpleGit, repositoryRoot: string) {
         };
       }
     })
-  ];
-}
-
-function setVoltAgentProductionDefault() {
-  process.env.NODE_ENV ??= "production";
+  };
 }
 
 export async function createWorkspaceDiffPayload(git: SimpleGit, scope: DiffScope): Promise<WorkspaceDiffPayload> {
