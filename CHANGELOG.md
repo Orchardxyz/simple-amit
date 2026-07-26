@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project uses Semantic Versioning with odd minor versions for VS Code Marketplace prereleases.
 
+## [0.2.1](https://github.com/Orchardxyz/simple-amit/compare/v0.2.0...v0.2.1) (2026-07-26)
+
+
+### Fixed
+
+* **deps:** update provider registry to stable release ([#14](https://github.com/Orchardxyz/simple-amit/issues/14)) ([b6bca37](https://github.com/Orchardxyz/simple-amit/commit/b6bca37a3f233a118cc8c3cec3517664624b25bf))
+
+
+### Changed
+
+* **extension:** reduce bundled agent runtime ([#12](https://github.com/Orchardxyz/simple-amit/issues/12)) ([8869303](https://github.com/Orchardxyz/simple-amit/commit/8869303430a01fc0b9ba17dd6d12d63b0efe3dd0))
+
 ## [0.2.0](https://github.com/Orchardxyz/simple-amit/compare/v0.1.2...v0.2.0) (2026-07-20)
 
 
