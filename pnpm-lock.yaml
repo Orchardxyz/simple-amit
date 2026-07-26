@@ -21,8 +21,8 @@ importers:
         specifier: ^6.0.230
         version: 6.0.230(zod@4.4.3)
       openai-compatible-provider-registry:
-        specifier: 0.1.0-beta.0
-        version: 0.1.0-beta.0
+        specifier: 0.1.0
+        version: 0.1.0
       simple-git:
         specifier: ^3.36.0
         version: 3.36.0
@@ -2891,8 +2891,8 @@ packages:
     resolution: {integrity: sha512-YgBpdJHPyQ2UE5x+hlSXcnejzAvD0b22U2OuAP+8OnlJT+PjWPxtgmGqKKc+RgTM63U9gN0YzrYc71R2WT/hTA==}
     engines: {node: '>=18'}
 
-  openai-compatible-provider-registry@0.1.0-beta.0:
-    resolution: {integrity: sha512-koGYJXZh03j3slZC3emjs6Sot840nWvXnrl8tzs6DtWDKTROg+f0ZpmLzpT/J3Yg0FVZOXB6G0xpS/4RntIc8Q==}
+  openai-compatible-provider-registry@0.1.0:
+    resolution: {integrity: sha512-IZjvoZLkBBdOyjcNruqyA1L0CKDcsAIrMIm6k5CUbJZwA6kx/NEwQtamHTF2ES29tPMN4Qwich9BgGRIVkWHBQ==}
     engines: {node: '>=20'}
 
   optionator@0.9.4:
@@ -6722,7 +6722,7 @@ snapshots:
       is-inside-container: 1.0.0
       wsl-utils: 0.1.0
 
-  openai-compatible-provider-registry@0.1.0-beta.0: {}
+  openai-compatible-provider-registry@0.1.0: {}
 
   optionator@0.9.4:
     dependencies:
