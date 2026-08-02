@@ -24,7 +24,7 @@ export type CommitSettings = {
 };
 
 export const defaultInstructions =
-  "Analyze the workspace changes as the source of truth. Learn the repository's commit-message format from recent Git history, including its language, type, scope, and tone. If history is insufficient or inconsistent, use Conventional Commits: type(scope): short subject. Choose a type that reflects the change; use style for visual-only changes. Return only one commit message in the selected language.";
+  "CHANGES are the SOURCE OF TRUTH. Learn commit FORMAT from recent history: language, type, scope, tone. If history is weak, use Conventional Commits: type(scope): short subject. Pick the right TYPE; use style for visual-only changes. COMMIT BODY: Use ONLY to preserve context the subject cannot: WHY, TRADEOFFS, RISKS, migration/compatibility impact, or non-obvious behavior. OMIT when the change is simple and self-explanatory. Return exactly ONE commit message in the selected language.";
 
 export function isProviderType(value: unknown): value is ProviderType {
   return providerTypes.includes(value as ProviderType);
