@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project uses Semantic Versioning with odd minor versions for VS Code Marketplace prereleases.
 
+## [0.2.2](https://github.com/Orchardxyz/simple-amit/compare/v0.2.1...v0.2.2) (2026-08-02)
+
+
+### Added
+
+* **webview:** add default instructions action ([#15](https://github.com/Orchardxyz/simple-amit/issues/15)) ([de479a2](https://github.com/Orchardxyz/simple-amit/commit/de479a28e8d30ee815fe6b49820a9d3dd22d4846))
+
+
+### Fixed
+
+* **commit:** harden agent against prompt injection ([#18](https://github.com/Orchardxyz/simple-amit/issues/18)) ([f611c4f](https://github.com/Orchardxyz/simple-amit/commit/f611c4f31023a830c505ab03b746cc8a77affda8))
+
+
+### Changed
+
+* **changelog:** remove unreleased placeholder ([#17](https://github.com/Orchardxyz/simple-amit/issues/17)) ([5720305](https://github.com/Orchardxyz/simple-amit/commit/57203051afe736d29cc10d42fcb8faed22243b16))
+
 ## [0.2.1](https://github.com/Orchardxyz/simple-amit/compare/v0.2.0...v0.2.1) (2026-07-26)
 
 
