@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project uses Semantic Versioning with odd minor versions for VS Code Marketplace prereleases.
 
+## [0.2.3](https://github.com/Orchardxyz/simple-amit/compare/v0.2.2...v0.2.3) (2026-08-05)
+
+
+### Added
+
+* **commit:** prefer bullet-point bodies ([#19](https://github.com/Orchardxyz/simple-amit/issues/19)) ([5c7e0e0](https://github.com/Orchardxyz/simple-amit/commit/5c7e0e09847026df9a3ebc5656c00c2616469701))
+
 ## [0.2.2](https://github.com/Orchardxyz/simple-amit/compare/v0.2.1...v0.2.2) (2026-08-02)
 
 
