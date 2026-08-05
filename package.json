@@ -129,7 +129,7 @@
         },
         "simple-amit.instructions": {
           "type": "string",
-          "default": "CHANGES are the SOURCE OF TRUTH. Learn commit FORMAT from recent history: language, type, scope, tone. If history is weak, use Conventional Commits: type(scope): short subject. Pick the right TYPE; use style for visual-only changes. COMMIT BODY: Use ONLY to preserve context the subject cannot: WHY, TRADEOFFS, RISKS, migration/compatibility impact, or non-obvious behavior. OMIT when the change is simple and self-explanatory. Return exactly ONE commit message in the selected language.",
+          "default": "CHANGES are the SOURCE OF TRUTH. Learn commit FORMAT from recent history: language, type, scope, tone.\nIf history is weak, use Conventional Commits: type(scope): short subject.\nPick the right TYPE; use style for visual-only changes.\n\nCOMMIT BODY:\n- Use ONLY to preserve context the subject cannot: WHY, TRADEOFFS, RISKS, migration/compatibility impact, or non-obvious behavior.\n- OMIT when the change is simple and self-explanatory.\n- When a body is useful, format it as concise hyphen-prefixed bullet points, with one distinct change or rationale per bullet.\n- Keep each bullet brief.\n- Use a short paragraph only when the context cannot be naturally split into separate points.\n\nReturn exactly ONE commit message in the selected language.",
           "description": "Instructions appended to commit-message generation requests."
         }
       }

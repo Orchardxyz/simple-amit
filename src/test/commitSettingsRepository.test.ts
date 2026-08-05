@@ -1,8 +1,28 @@
 import * as assert from "assert";
+import { readFileSync } from "fs";
+import { resolve } from "path";
 import { resolveCommitSettings } from "../settings/commitSettingsRepository";
 import { defaultInstructions, getCurrentProviderModel, saveCurrentProviderModel } from "../shared/commitSettings";
 
 suite("Commit settings repository", () => {
+  test("formats useful commit bodies as concise bullet points", () => {
+    assert.strictEqual(defaultInstructions.includes("format it as concise hyphen-prefixed bullet points"), true);
+    assert.strictEqual(defaultInstructions.includes("one distinct change or rationale per bullet"), true);
+    assert.strictEqual(defaultInstructions.includes("Use a short paragraph only when"), true);
+  });
+
+  test("keeps the extension manifest instruction default in sync", () => {
+    const manifest = JSON.parse(readFileSync(resolve(__dirname, "../../package.json"), "utf8")) as {
+      contributes: {
+        configuration: {
+          properties: Record<string, { default: string }>;
+        };
+      };
+    };
+
+    assert.strictEqual(manifest.contributes.configuration.properties["simple-amit.instructions"].default, defaultInstructions);
+  });
+
   test("fills missing and invalid values with defaults", () => {
     const defaults = {
       providerType: "compatible",
