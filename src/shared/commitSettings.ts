@@ -23,8 +23,20 @@ export type CommitSettings = {
   instructions: string;
 };
 
-export const defaultInstructions =
-  "CHANGES are the SOURCE OF TRUTH. Learn commit FORMAT from recent history: language, type, scope, tone. If history is weak, use Conventional Commits: type(scope): short subject. Pick the right TYPE; use style for visual-only changes. COMMIT BODY: Use ONLY to preserve context the subject cannot: WHY, TRADEOFFS, RISKS, migration/compatibility impact, or non-obvious behavior. OMIT when the change is simple and self-explanatory. Return exactly ONE commit message in the selected language.";
+export const defaultInstructions = `
+CHANGES are the SOURCE OF TRUTH. Learn commit FORMAT from recent history: language, type, scope, tone.
+If history is weak, use Conventional Commits: type(scope): short subject.
+Pick the right TYPE; use style for visual-only changes.
+
+COMMIT BODY:
+- Use ONLY to preserve context the subject cannot: WHY, TRADEOFFS, RISKS, migration/compatibility impact, or non-obvious behavior.
+- OMIT when the change is simple and self-explanatory.
+- When a body is useful, format it as concise hyphen-prefixed bullet points, with one distinct change or rationale per bullet.
+- Keep each bullet brief.
+- Use a short paragraph only when the context cannot be naturally split into separate points.
+
+Return exactly ONE commit message in the selected language.
+`.trim();
 
 export function isProviderType(value: unknown): value is ProviderType {
   return providerTypes.includes(value as ProviderType);
