@@ -168,6 +168,15 @@
 		}
 	}
 
+	async function copyInstructions(instructions: string) {
+		try {
+			await bridge.request(BridgeMethod.CopyInstructions, instructions);
+			notify.success(t('commit.instructions.copied'));
+		} catch {
+			notify.error(t('commit.instructions.copyFailed'));
+		}
+	}
+
 	async function loadInitialState() {
 		requestInFlight = true;
 
@@ -394,7 +403,7 @@
 			{t}
 		/>
 
-		<CommitMessageSettings bind:settings onChange={markUnsaved} {t} />
+		<CommitMessageSettings bind:settings onChange={markUnsaved} onCopyInstructions={instructions => void copyInstructions(instructions)} {t} />
 
 		<footer
 			class="flex flex-col-reverse items-start justify-between gap-3 border-t border-[var(--vscode-panel-border)] bg-[var(--vscode-sideBar-background)] px-5 py-4 sm:flex-row sm:items-center sm:px-7"

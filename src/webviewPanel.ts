@@ -71,6 +71,10 @@ export class SimpleAmitWebviewPanel {
       [BridgeMethod.SaveUiLanguage]: async (uiLanguage) => {
         const savedUiLanguage = await saveUiLanguage(this.context.globalState, uiLanguage);
         return { uiLanguage: savedUiLanguage };
+      },
+      [BridgeMethod.CopyInstructions]: async (instructions) => {
+        await vscode.env.clipboard.writeText(instructions);
+        return {};
       }
     };
   }
