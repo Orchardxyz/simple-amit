@@ -17,7 +17,8 @@ export const BridgeMethod = {
   ClearApiKey: "settings.clearApiKey",
   SaveSettings: "settings.save",
   ResetSettings: "settings.reset",
-  SaveUiLanguage: "uiLanguage.save"
+  SaveUiLanguage: "uiLanguage.save",
+  CopyInstructions: "instructions.copy"
 } as const;
 
 export type BridgeMethod = (typeof BridgeMethod)[keyof typeof BridgeMethod];
@@ -109,6 +110,10 @@ export type BridgeContract = {
     params: UiLanguage;
     result: UiLanguageResult;
   };
+  [BridgeMethod.CopyInstructions]: {
+    params: string;
+    result: Record<string, never>;
+  };
 };
 
 export type BridgeRequestParams<Method extends BridgeMethod> = BridgeContract[Method]["params"];
@@ -163,6 +168,8 @@ export function isBridgeRequest(message: unknown): message is BridgeRequest {
       return message.params === undefined;
     case BridgeMethod.SaveUiLanguage:
       return isUiLanguage(message.params);
+    case BridgeMethod.CopyInstructions:
+      return typeof message.params === "string";
     case BridgeMethod.GetApiKeyStatus:
     case BridgeMethod.ClearApiKey:
       return isCommitSettings(message.params);

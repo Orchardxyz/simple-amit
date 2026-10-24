@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { MessageSquareText, RotateCcw } from '@lucide/svelte';
+	import { Copy, MessageSquareText, RotateCcw } from '@lucide/svelte';
 	import { defaultInstructions, type CommitSettings } from '../../shared/commitSettings';
 	import Button from './ui/Button.svelte';
 	import FormField from './ui/FormField.svelte';
@@ -10,11 +10,13 @@
 
 	type Props = {
 		onChange: () => void;
+		// eslint-disable-next-line no-unused-vars
+		onCopyInstructions: (instructions: string) => void;
 		settings: CommitSettings;
 		t: Translator;
 	};
 
-	let { onChange, settings = $bindable(), t }: Props = $props();
+	let { onChange, onCopyInstructions, settings = $bindable(), t }: Props = $props();
 	let sectionOpen = $state(true);
 
 	function updateSettings(changes: Partial<CommitSettings>) {
@@ -47,6 +49,21 @@
 			label={t('commit.instructions.label')}
 		>
 			{#snippet action()}
+				<span class="inline-flex items-center gap-1">
+				<Tooltip text={t('commit.instructions.copyTooltip')}>
+					{#snippet children(tooltipProps)}
+						<Button
+							{...tooltipProps}
+							type="button"
+							variant="ghost"
+							size="icon"
+							onClick={() => onCopyInstructions(settings.instructions)}
+							aria-label={t('commit.instructions.copy')}
+						>
+							<Copy size={14} strokeWidth={1.8} aria-hidden="true" />
+						</Button>
+					{/snippet}
+				</Tooltip>
 				<Tooltip text={t('commit.instructions.applyDefaultTooltip')}>
 					{#snippet children(tooltipProps)}
 						<Button
@@ -61,6 +78,7 @@
 						</Button>
 					{/snippet}
 				</Tooltip>
+				</span>
 			{/snippet}
 			<textarea
 				id="instructions"
