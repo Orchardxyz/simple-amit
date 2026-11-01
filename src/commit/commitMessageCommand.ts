@@ -1,9 +1,10 @@
 import * as vscode from "vscode";
 import { getCommitSettings } from "../settings/commitSettingsRepository";
-import { generateCommitMessageWithAgent } from "./commitMessageAgent";
-import { createGitClient, hasWorkspaceChanges } from "./gitTools";
+import { generateCommitMessageWithAgent, type CommitMessageResult } from "./commitMessageAgent";
+import { createGitClient, hasWorkspaceChanges, readGit } from "./gitTools";
 import { createCommitLanguageModel } from "./modelFactory";
 import type { ApiKeyStore } from "../settings/apiKeyStore";
+import type { SimpleGit } from "simple-git";
 
 type GitExtension = {
   getAPI(version: 1): GitApi;
@@ -44,33 +45,68 @@ export function createGenerateCommitMessageCommand(apiKeyStore: ApiKeyStore) {
       return;
     }
 
-    const git = createGitClient(workspaceFolder);
-    const status = await git.status();
-
-    if (!hasWorkspaceChanges(status)) {
-      await vscode.window.showWarningMessage("No Git changes found for Simple Amit to analyze.");
-      return;
-    }
-
+    const controller = new AbortController();
     try {
-      const result = await vscode.window.withProgress(
+      const outcome = await vscode.window.withProgress(
         {
-          cancellable: false,
+          cancellable: true,
           location: vscode.ProgressLocation.Notification,
           title: "Generating commit message with Simple Amit"
         },
-        async () =>
-          generateCommitMessageWithAgent({
-            git,
-            model: await createCommitLanguageModel(settings, apiKey),
-            repositoryRoot: workspaceFolder,
-            settings
-          })
+        async (_progress, token) => {
+          let committed = false;
+          const subscription = token.onCancellationRequested(() => {
+            if (!committed) {
+              controller.abort();
+            }
+          });
+
+          try {
+            if (token.isCancellationRequested) {
+              controller.abort();
+            }
+
+            controller.signal.throwIfAborted();
+            const model = await createCommitLanguageModel(settings, apiKey);
+            const git = createGitClient(workspaceFolder);
+
+            return await runCommitMessageGeneration({
+              git,
+              signal: controller.signal,
+              generate: () =>
+                generateCommitMessageWithAgent({
+                  git,
+                  model,
+                  repositoryRoot: workspaceFolder,
+                  settings,
+                  signal: controller.signal
+                }),
+              writeMessage: (message) => {
+                committed = true;
+                writeCommitMessage(repository, message);
+              }
+            });
+          } finally {
+            subscription.dispose();
+          }
+        }
       );
 
-      writeCommitMessage(repository, result.message);
+      if (controller.signal.aborted) {
+        return;
+      }
+
+      if (outcome === "no_changes") {
+        await vscode.window.showWarningMessage("No Git changes found for Simple Amit to analyze.");
+        return;
+      }
+
       await vscode.window.showInformationMessage("Simple Amit generated a commit message.");
     } catch (error) {
+      if (controller.signal.aborted) {
+        return;
+      }
+
       const selection = await vscode.window.showErrorMessage(
         `Unable to generate a commit message with Simple Amit: ${getErrorMessage(error)}`,
         "Open Settings"
@@ -81,6 +117,26 @@ export function createGenerateCommitMessageCommand(apiKeyStore: ApiKeyStore) {
       }
     }
   };
+}
+
+type RunCommitMessageGenerationOptions = {
+  git: SimpleGit;
+  signal: AbortSignal;
+  generate: () => Promise<CommitMessageResult>;
+  writeMessage: (message: string) => void;
+};
+
+export async function runCommitMessageGeneration(options: RunCommitMessageGenerationOptions): Promise<"generated" | "no_changes"> {
+  const status = await readGit(options.signal, () => options.git.status());
+
+  if (!hasWorkspaceChanges(status)) {
+    return "no_changes";
+  }
+
+  const result = await options.generate();
+  options.signal.throwIfAborted();
+  options.writeMessage(result.message);
+  return "generated";
 }
 
 async function resolveGitRepository() {

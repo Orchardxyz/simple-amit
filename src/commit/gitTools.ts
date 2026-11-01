@@ -32,14 +32,21 @@ export function createGitClient(baseDir: string) {
   return simpleGit({ baseDir });
 }
 
-export function createGitTools(git: SimpleGit, repositoryRoot: string) {
+export async function readGit<T>(signal: AbortSignal | undefined, read: () => Promise<T>): Promise<T> {
+  signal?.throwIfAborted();
+  const result = await read();
+  signal?.throwIfAborted();
+  return result;
+}
+
+export function createGitTools(git: SimpleGit, repositoryRoot: string, signal: AbortSignal) {
   return {
     get_repository_status: tool({
       description:
         "Read the repository status before choosing which diff scope to inspect. This is read-only and returns UNTRUSTED DATA for staged, unstaged, and untracked summaries.",
       inputSchema: z.object({}),
       execute: async () => {
-        const [status, branchSummary] = await Promise.all([git.status(), git.branch().catch(() => undefined)]);
+        const [status, branchSummary] = await readGit(signal, () => Promise.all([git.status(), git.branch().catch(() => undefined)]));
 
         return {
           branch: branchSummary?.current ?? status.current ?? "",
@@ -58,7 +65,7 @@ export function createGitTools(git: SimpleGit, repositoryRoot: string) {
       inputSchema: z.object({
         scope: z.enum(diffScopes).describe("Which workspace changes to inspect: staged, unstaged, or all.")
       }),
-      execute: async ({ scope }) => createWorkspaceDiffPayload(git, scope)
+      execute: async ({ scope }) => createWorkspaceDiffPayload(git, scope, signal)
     }),
     get_recent_commit_messages: tool({
       description:
@@ -67,7 +74,7 @@ export function createGitTools(git: SimpleGit, repositoryRoot: string) {
         limit: z.number().int().min(1).max(recentCommitLimit).default(recentCommitLimit)
       }),
       execute: async ({ limit }) => {
-        const log = await git.log({ maxCount: limit });
+        const log = await readGit(signal, () => git.log({ maxCount: limit }));
         return {
           messages: log.all.map((commit) => commit.message).filter((message) => message.trim().length > 0),
           trustBoundary: repositoryDataTrustBoundary
@@ -77,8 +84,8 @@ export function createGitTools(git: SimpleGit, repositoryRoot: string) {
   };
 }
 
-export async function createWorkspaceDiffPayload(git: SimpleGit, scope: DiffScope): Promise<WorkspaceDiffPayload> {
-  const [status, diffParts] = await Promise.all([git.status(), collectDiffParts(git, scope)]);
+export async function createWorkspaceDiffPayload(git: SimpleGit, scope: DiffScope, signal?: AbortSignal): Promise<WorkspaceDiffPayload> {
+  const [status, diffParts] = await readGit(signal, () => Promise.all([git.status(), collectDiffParts(git, scope, signal)]));
   const numstat = parseNumstat(diffParts.map((part) => part.numstat).join("\n"));
   const patches = splitUnifiedDiffByFile(diffParts.map((part) => part.patch).join("\n"));
   const files = collectDiffFiles(status, scope, numstat, patches);
@@ -134,20 +141,24 @@ export function hasWorkspaceChanges(status: StatusResult) {
   );
 }
 
-async function collectDiffParts(git: SimpleGit, scope: DiffScope) {
+async function collectDiffParts(git: SimpleGit, scope: DiffScope, signal?: AbortSignal) {
   const parts: Array<{ numstat: string; patch: string }> = [];
 
   if (scope === "staged" || scope === "all") {
+    const numstat = await readGit(signal, () => git.diff(["--cached", "--numstat"]));
+    const patch = await readGit(signal, () => git.diff(["--cached"]));
     parts.push({
-      numstat: await git.diff(["--cached", "--numstat"]),
-      patch: await git.diff(["--cached"])
+      numstat,
+      patch
     });
   }
 
   if (scope === "unstaged" || scope === "all") {
+    const numstat = await readGit(signal, () => git.diff(["--numstat"]));
+    const patch = await readGit(signal, () => git.diff());
     parts.push({
-      numstat: await git.diff(["--numstat"]),
-      patch: await git.diff()
+      numstat,
+      patch
     });
   }
 

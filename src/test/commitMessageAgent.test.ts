@@ -1,8 +1,47 @@
 import * as assert from "assert";
-import { createAgentInstructions, normalizeAgentOutput } from "../commit/commitMessageAgent";
-import { validSettings } from "./testFixtures";
+import { MockLanguageModelV3 } from "ai/test";
+import { createAgentInstructions, generateCommitMessageWithAgent, normalizeAgentOutput } from "../commit/commitMessageAgent";
+import { createFakeStatus, FakeSimpleGit, validSettings } from "./testFixtures";
+import type { SimpleGit } from "simple-git";
 
 suite("Commit message agent output", () => {
+  test("aborts a language-repair request without returning a late result", async () => {
+    const controller = new AbortController();
+    let resolveRepair!: (value: ReturnType<typeof modelResult>) => void;
+    let startedRepair!: () => void;
+    const repairStarted = new Promise<void>((resolve) => (startedRepair = resolve));
+    const repair = new Promise<ReturnType<typeof modelResult>>((resolve) => (resolveRepair = resolve));
+    let calls = 0;
+    const model = new MockLanguageModelV3({
+      doGenerate: () => {
+        calls += 1;
+        if (calls === 1) {
+          return Promise.resolve(modelResult("feat(commit): 支持取消"));
+        }
+
+        startedRepair();
+        return repair;
+      }
+    });
+    const git = new FakeSimpleGit({ status: createFakeStatus() });
+
+    const pending = generateCommitMessageWithAgent({
+      git: git as unknown as SimpleGit,
+      model,
+      repositoryRoot: "/repo",
+      settings: validSettings,
+      signal: controller.signal
+    });
+
+    await repairStarted;
+    controller.abort();
+    resolveRepair(modelResult("feat(commit): support cancellation"));
+
+    await assert.rejects(pending);
+    assert.strictEqual(calls, 2);
+    assert.strictEqual(model.doGenerateCalls[1].abortSignal?.aborted, true);
+  });
+
   test("normalizes loose model JSON into the internal result shape", () => {
     const result = normalizeAgentOutput(
       {
@@ -46,3 +85,15 @@ suite("Commit message agent output", () => {
     );
   });
 });
+
+function modelResult(message: string) {
+  return {
+    content: [{ type: "text" as const, text: JSON.stringify({ message }) }],
+    finishReason: { unified: "stop" as const, raw: undefined },
+    usage: {
+      inputTokens: { total: 1, noCache: 1, cacheRead: 0, cacheWrite: 0 },
+      outputTokens: { total: 1, text: 1, reasoning: 0 }
+    },
+    warnings: []
+  };
+}

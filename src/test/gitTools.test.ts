@@ -4,6 +4,22 @@ import { createFakeStatus, FakeSimpleGit } from "./testFixtures";
 import type { SimpleGit } from "simple-git";
 
 suite("Git diff tools", () => {
+  test("does not start another diff read after cancellation", async () => {
+    const controller = new AbortController();
+    let diffCalls = 0;
+    const git = {
+      status: async () => createFakeStatus({ staged: ["src/a.ts"] }),
+      diff: async () => {
+        diffCalls += 1;
+        controller.abort();
+        return "1\t1\tsrc/a.ts";
+      }
+    } as unknown as SimpleGit;
+
+    await assert.rejects(createWorkspaceDiffPayload(git, "staged", controller.signal));
+    assert.strictEqual(diffCalls, 1);
+  });
+
   test("returns only staged diff data for staged scope", async () => {
     const git = new FakeSimpleGit({
       stagedDiff: "diff --git a/src/a.ts b/src/a.ts\n@@ -1 +1 @@\n-old\n+new",

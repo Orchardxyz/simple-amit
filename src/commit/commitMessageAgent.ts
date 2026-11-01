@@ -38,29 +38,24 @@ export type GenerateCommitMessageAgentOptions = {
   model: LanguageModel;
   repositoryRoot: string;
   settings: CommitSettings;
+  signal: AbortSignal;
+};
+
+type RunAgentOptions = GenerateCommitMessageAgentOptions & {
+  prompt: string;
 };
 
 export async function generateCommitMessageWithAgent(options: GenerateCommitMessageAgentOptions): Promise<CommitMessageResult> {
-  const tools = createGitTools(options.git, options.repositoryRoot);
-  const firstResult = await runAgent(
-    options.model,
-    tools,
-    createAgentInstructions(options.settings),
-    createGenerationPrompt(options.settings.language),
-    options.settings.language
-  );
+  const firstResult = await runAgent({ ...options, prompt: createGenerationPrompt(options.settings.language) });
 
   if (firstResult.languageVerdict.matches) {
     return firstResult;
   }
 
-  const repairedResult = await runAgent(
-    options.model,
-    tools,
-    createAgentInstructions(options.settings),
-    createRepairPrompt(options.settings.language, firstResult.message),
-    options.settings.language
-  );
+  const repairedResult = await runAgent({
+    ...options,
+    prompt: createRepairPrompt(options.settings.language, firstResult.message)
+  });
 
   if (!repairedResult.languageVerdict.matches) {
     throw new Error("Generated commit message did not match the configured language.");
@@ -69,23 +64,20 @@ export async function generateCommitMessageWithAgent(options: GenerateCommitMess
   return repairedResult;
 }
 
-async function runAgent(
-  model: LanguageModel,
-  tools: ReturnType<typeof createGitTools>,
-  system: string,
-  prompt: string,
-  language: CommitMessageLanguage
-) {
+async function runAgent(options: RunAgentOptions) {
+  options.signal.throwIfAborted();
   const result = await generateText({
-    model,
+    abortSignal: options.signal,
+    model: options.model,
     output: Output.object({ schema: agentCommitMessageOutputSchema }),
-    prompt,
+    prompt: options.prompt,
     stopWhen: stepCountIs(6),
-    system,
-    tools
+    system: createAgentInstructions(options.settings),
+    tools: createGitTools(options.git, options.repositoryRoot, options.signal)
   });
 
-  return normalizeAgentOutput(agentCommitMessageOutputSchema.parse(result.output), language);
+  options.signal.throwIfAborted();
+  return normalizeAgentOutput(agentCommitMessageOutputSchema.parse(result.output), options.settings.language);
 }
 
 export function createAgentInstructions(settings: CommitSettings) {
