@@ -2,7 +2,7 @@
   "name": "simple-amit",
   "displayName": "simple-amit",
   "description": "Simple extension for generating commit message with AI.",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "publisher": "Orchard",
   "license": "MIT",
   "repository": {

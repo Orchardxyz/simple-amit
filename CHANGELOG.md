@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project uses Semantic Versioning with odd minor versions for VS Code Marketplace prereleases.
 
+## [0.2.4](https://github.com/Orchardxyz/simple-amit/compare/v0.2.3...v0.2.4) (2026-11-01)
+
+
+### Added
+
+* **commit:** allow canceling commit message generation ([#23](https://github.com/Orchardxyz/simple-amit/issues/23)) ([327a66e](https://github.com/Orchardxyz/simple-amit/commit/327a66e797d78328bf64ad98bd0598b6f339d850))
+* **webview:** copy generation instructions ([#21](https://github.com/Orchardxyz/simple-amit/issues/21)) ([846f12b](https://github.com/Orchardxyz/simple-amit/commit/846f12b0aa334b8fa605f79ab1c2c202cb8e9af1))
+
 ## [0.2.3](https://github.com/Orchardxyz/simple-amit/compare/v0.2.2...v0.2.3) (2026-08-05)
 
 
